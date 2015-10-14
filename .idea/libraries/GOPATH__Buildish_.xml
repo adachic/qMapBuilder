@@ -1,0 +1,21 @@
+<component name="libraryTable">
+  <library name="GOPATH &lt;Buildish&gt;">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../gopath/src/houchiApp" />
+      <root url="file://$PROJECT_DIR$/../gopath/src/github.com" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+    <excluded>
+      <root url="file://$PROJECT_DIR$/../gopath/src/github.com/tools/godep/.git" />
+      <root url="file://$PROJECT_DIR$/../gopath/src/github.com/kr/godep/Godeps/_workspace" />
+      <root url="file://$PROJECT_DIR$/Buildish" />
+      <root url="file://$PROJECT_DIR$/../gopath/src/github.com/tools/godep/Godeps/_workspace" />
+      <root url="file://$PROJECT_DIR$/Builder" />
+      <root url="file://$PROJECT_DIR$" />
+      <root url="file://$PROJECT_DIR$/../gopath/src/houchiApp/Godeps/_workspace" />
+      <root url="file://$PROJECT_DIR$/../gopath/src/houchiApp/.git" />
+      <root url="file://$PROJECT_DIR$/../gopath/src/github.com/kr/godep/.git" />
+    </excluded>
+  </library>
+</component>
