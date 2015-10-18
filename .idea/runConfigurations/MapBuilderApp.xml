@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="MapBuilderApp" type="GoApplicationRunConfiguration" factoryName="Go Application">
+    <module name="qMapBuilder" />
+    <working_directory value="$PROJECT_DIR$/" />
+    <parameters value="GameParts.go" />
+    <filePath value="$PROJECT_DIR$/src/mapBuilderApp/main.go" />
+    <kind value="FILE" />
+    <package value="MapBuilder" />
+    <method />
+  </configuration>
+</component>
