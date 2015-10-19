@@ -9,13 +9,17 @@ import (
 func main() {
 	fmt.Printf("Hello, world.\n")
 
-	//pre
+	//pre;
 	//- [] パーツ情報のロード
-	//マップパーツ情報
-	MapBuilder.CreateGamePartsDict()
+	gamePartsDict := MapBuilder.CreateGamePartsDict()
+
+	//loop;
+	//- [] アルゴリズムで自動生成
+	MapBuilder.CreateGameMap(gamePartsDict)
+
+	//post;
 
 	/*
-
 	//loop
 	//- [] アルゴリズムで自動生成
 	createGameMap()
@@ -25,7 +29,6 @@ func main() {
 	createJsonFromMap()
 
 	//- [] エディタでjsonロード
-
 	*/
 	fmt.Printf("Hello, world2.\n")
 }

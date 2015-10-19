@@ -65,10 +65,8 @@ type GameParts struct {
 	StructureType StructureType
 }
 
-
 //jsonから辞書作成
 func CreateGamePartsDict() map[string]GameParts {
-	//ファイルから文字列読み込み
 	// Loading jsonfile
 	file, err := ioutil.ReadFile("./src/MapBuilder/AppParts.json")
 	// 指定したDataset構造体が中身になるSliceで宣言する
@@ -83,12 +81,5 @@ func CreateGamePartsDict() map[string]GameParts {
 	fmt.Printf("%+v\n",len(partsDict))
 	fmt.Printf("%+v\n",partsDict["15"])
 
-	//jsonからパース
-
-	//id単位で辞書に突っ込んでいく
-
-	return nil
+	return partsDict
 }
-
-
-var dict map[string]GameParts
