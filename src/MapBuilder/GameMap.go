@@ -38,12 +38,28 @@ const (
 	square RectForm = 2
 )
 
+//地形
+type Geographical int
+const (
+	GeographicalStep Geographical = 14 + 10
+	GeographicalMountain Geographical = 9 + 10
+	GeographicalCave Geographical = 8 + 10
+	GeographicalFort Geographical = 7 + 10
+	GeographicalShrine Geographical = 6 + 10
+	GeographicalTown Geographical = 5 + 10
+	GeographicalCastle Geographical = 4 + 10
+)
+
 //確率を返す
 func (d Difficult) Prob() int {
 	return int(d)
 }
 
 func (d RectForm) Prob() int {
+	return int(d)
+}
+
+func (d Geographical) Prob() int {
 	return int(d)
 }
 
@@ -155,6 +171,24 @@ func createMapSize(difficult Difficult) GameMapSize {
 	return GameMapSize{x, y, 30}
 }
 
+//地形の抽選結果を返す
+func createMapGeographical() Geographical{
+	lot := lottery.New(rand.New(rand.NewSource(time.Now().UnixNano())))
+	geographicals := []lottery.Interface{
+		GeographicalStep,
+		GeographicalMountain,
+		GeographicalCave,
+		GeographicalFort,
+		GeographicalShrine,
+		GeographicalTown,
+		GeographicalCastle,
+	}
+	result := lot.Lots(
+		geographicals...,
+	)
+	return geographicals[result].(Geographical)
+}
+
 func CreateGameMap(gamePartsDict map[string]GameParts) GameMap {
 	x := 100
 	for x > 0 {
@@ -176,6 +210,8 @@ func CreateGameMap(gamePartsDict map[string]GameParts) GameMap {
 	fmt.Printf("mapSize: %+v\n", mapSize)
 
 	//大まかな地形を決定
+	//geographical := createMapGeographical()
+	 createMapGeographical()
 
 	//味方開始ポイントを決定
 
