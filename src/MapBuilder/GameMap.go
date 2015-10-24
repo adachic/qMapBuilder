@@ -219,46 +219,54 @@ func createAllyStartPoint(difficult Difficult, mapSize GameMapSize) GameMapPosit
 		seed = distanceFromCenter{0, 20}
 		break;
 	}
-	//中央からの距離比率
 	distanceFrom := lottery.GetRandomInt(seed.distanceFromCenterMin, seed.distanceFromCenterMax)
-	//角度
-	degree := lottery.GetRandomInt(0, 360)
-	radian := float64(degree) / (math.Pi * 2.0)
-	//半径
-	var r float64
-	if(mapSize.MaxX > mapSize.MaxY){
-		r = float64(mapSize.MaxX) / 2.0 * float64(distanceFrom) / 100.0
-	}else{
-		r = float64(mapSize.MaxY) / 2.0 * float64(distanceFrom) / 100.0
-	}
-	x := r * math.Cos(radian)
-	y := r * math.Sin(radian)
-	x2 := int(float64(mapSize.MaxX) / 2.0 + x)
-	y2 := int(float64(mapSize.MaxY) / 2.0 + y)
-
-	if(x2 >= mapSize.MaxX){
-		x2 = mapSize.MaxX - 1
-	}
-	if(x2 < 0){
-		x2 = 0
-	}
-	if(y2 >= mapSize.MaxY){
-		y2 = mapSize.MaxY - 1
-	}
-	if(y2 < 0){
-		y2 = 0
-	}
-	return GameMapPosition{x2, y2, 0}
+	return createRandomPositionInMap(mapSize, GameMapPosition{mapSize.MaxX/2,mapSize.MaxY/2, 0}, distanceFrom)
 }
 
-//敵の出現座標の一覧を返す
-func createEnemyStartPoint() []GameMapPosition {
+//敵出現座標の一覧を返す
+func createEnemyStartPoints(difficult Difficult,
+mapSize GameMapSize,
+allyStartPoint GameMapPosition) []GameMapPosition {
+	type rangeFromAlly struct{
+		Min int
+		Max int
+	}
+	//味方と敵との大体の距離感
+	var rangeFrom rangeFromAlly
+	//敵出撃座標の数
+	var sattyPointNum int
 
-	return nil
+	switch difficult {
+	case easy:
+		sattyPointNum = lottery.GetRandomInt(1,3)
+		rangeFrom = rangeFromAlly{15, 30}
+		break;
+	case normal:
+		sattyPointNum = lottery.GetRandomInt(3,6)
+		rangeFrom = rangeFromAlly{8, 30}
+		break;
+	case hard:
+		sattyPointNum = lottery.GetRandomInt(5,10)
+		rangeFrom = rangeFromAlly{5, 30}
+		break;
+	case exhard:
+		sattyPointNum = lottery.GetRandomInt(10,20)
+		rangeFrom = rangeFromAlly{5, 30}
+		break;
+	}
+	var sattyPoints []GameMapPosition
+	for sattyPointNum > 0{
+		sattyPointNum--
+		//味方ポイントからの距離
+		distance := lottery.GetRandomInt(rangeFrom.Min, rangeFrom.Max)
+		sattyPoint := createRandomPositionInMap(mapSize, allyStartPoint, distance)
+		sattyPoints = append(sattyPoints , sattyPoint)
+	}
+	return sattyPoints
 }
 
 //雑に100回まわしてみる
-func bulc(){
+func bulc() {
 	x := 100
 	for x > 0 {
 		x--
@@ -267,7 +275,8 @@ func bulc(){
 	}
 }
 
-func flow(){
+//基本フロー
+func flow() {
 	//難易度を決定
 	difficult := createMapDifficult()
 	fmt.Printf("difficult: %+v\n", difficult)
@@ -285,7 +294,10 @@ func flow(){
 	fmt.Printf("allyStartPoint: %+v\n", allyStartPoint)
 
 	//敵開始ポイントを決定
-	//	createEnemyStartPoints()
+	enemyStartPoints := createEnemyStartPoints(difficult, mapSize, allyStartPoint)
+	for _, enemyStartPoint := range enemyStartPoints {  // キーは使われません
+		fmt.Printf("enemyStartPoint: %+v\n", enemyStartPoint)
+	}
 
 
 	//広場生成
