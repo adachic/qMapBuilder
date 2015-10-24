@@ -21,6 +21,11 @@ type GameMapSize struct {
 	MaxZ int
 }
 
+//面積
+func (s GameMapSize) area() int{
+	return s.MaxY * s.MaxX
+}
+
 //マップの難度
 type Difficult int
 
@@ -277,23 +282,6 @@ func createEnemyStartPoints(difficult Difficult,
 	return sattyPoints
 }
 
-//見下ろしマップを返す
-func createXYMap(difficult Difficult,
-	mapSize GameMapSize,
-	geographical Geographical,
-	allyStartPoint GameMapPosition,
-	enemyStartPoints GameMapPosition) [][]MacroMapType {
-
-	//広場生成
-	createPlaza(allyStartPoint)
-
-	//道生成
-
-	//壁生成
-
-	//ラフ生成
-
-}
 
 //雑に100回まわしてみる
 func bulc() {
