@@ -1,11 +1,11 @@
 package MapBuilder
 
 import (
-	"github.com/adachic/lottery"
-	"time"
-	"math/rand"
-	"math"
 	"fmt"
+	"github.com/adachic/lottery"
+	"math"
+	"math/rand"
+	"time"
 )
 
 //マップ
@@ -23,31 +23,43 @@ type GameMapSize struct {
 
 //マップの難度
 type Difficult int
+
 const (
-	easy Difficult = 10
+	easy   Difficult = 10
 	normal Difficult = 3
-	hard Difficult = 2
+	hard   Difficult = 2
 	exhard Difficult = 1
 )
 
 //長方形の形式
 type RectForm int
+
 const (
-	horizontalLong RectForm = 6//横長
-	verticalLong RectForm = 5
-	square RectForm = 2
+	horizontalLong RectForm = 6 //横長
+	verticalLong   RectForm = 5
+	square         RectForm = 2
 )
 
 //地形
 type Geographical int
+
 const (
-	GeographicalStep Geographical = 14 + 10
+	GeographicalStep     Geographical = 14 + 10
 	GeographicalMountain Geographical = 9 + 10
-	GeographicalCave Geographical = 8 + 10
-	GeographicalFort Geographical = 7 + 10
-	GeographicalShrine Geographical = 6 + 10
-	GeographicalTown Geographical = 5 + 10
-	GeographicalCastle Geographical = 4 + 10
+	GeographicalCave     Geographical = 8 + 10
+	GeographicalFort     Geographical = 7 + 10
+	GeographicalShrine   Geographical = 6 + 10
+	GeographicalTown     Geographical = 5 + 10
+	GeographicalCastle   Geographical = 4 + 10
+)
+
+type MacroMapType int
+
+const (
+	MacroMapTypeLoad = iota
+	MacroMapTypeRough
+	MacroMapTypeWall
+	MacroMapTypeCantEnter //進入不可地形
 )
 
 //座標
@@ -108,12 +120,12 @@ func createAspectOfRectFrom(rectForm RectForm) float32 {
 	const minLength = 3
 	const maxLength = 10
 
-	x := lottery.GetRandomNormInt(minLength, maxLength);
+	x := lottery.GetRandomNormInt(minLength, maxLength)
 	y := (minLength + maxLength) - x
 	if x > y {
 		longer = x
 		shorter = y
-	}else {
+	} else {
 		longer = y
 		shorter = x
 	}
@@ -123,13 +135,13 @@ func createAspectOfRectFrom(rectForm RectForm) float32 {
 	switch rectForm {
 	case horizontalLong:
 		ret = float32(longer) / float32(shorter)
-		break;
+		break
 	case verticalLong:
 		ret = float32(shorter) / float32(longer)
-		break;
+		break
 	case square:
 		ret = 1.0
-		break;
+		break
 	}
 	return ret
 }
@@ -140,17 +152,17 @@ func createArea(difficult Difficult) int {
 	//10x10を最小とし、30x30を最大とする
 	switch difficult {
 	case easy:
-		ret = lottery.GetRandomInt(10 * 10, 15 * 15)
-		break;
+		ret = lottery.GetRandomInt(10*10, 15*15)
+		break
 	case normal:
-		ret = lottery.GetRandomInt(10 * 10, 25 * 25)
-		break;
+		ret = lottery.GetRandomInt(10*10, 25*25)
+		break
 	case hard:
-		ret = lottery.GetRandomInt(15 * 15, 30 * 30)
-		break;
+		ret = lottery.GetRandomInt(15*15, 30*30)
+		break
 	case exhard:
-		ret = lottery.GetRandomInt(15 * 15, 30 * 30)
-		break;
+		ret = lottery.GetRandomInt(15*15, 30*30)
+		break
 	}
 	return ret
 }
@@ -170,7 +182,7 @@ func createMapSize(difficult Difficult) GameMapSize {
 	yy := float32(area) / float32(aspect)
 	fmt.Printf("yy: %f\n", yy)
 	y := int(math.Sqrt(float64(yy)))
-	if (y < 1) {
+	if y < 1 {
 		y = 1
 	}
 	x := int(area / y)
@@ -208,26 +220,26 @@ func createAllyStartPoint(difficult Difficult, mapSize GameMapSize) GameMapPosit
 	switch difficult {
 	case easy:
 		seed = distanceFromCenter{70, 100}
-		break;
+		break
 	case normal:
 		seed = distanceFromCenter{30, 80}
-		break;
+		break
 	case hard:
 		seed = distanceFromCenter{0, 50}
-		break;
+		break
 	case exhard:
 		seed = distanceFromCenter{0, 20}
-		break;
+		break
 	}
 	distanceFrom := lottery.GetRandomInt(seed.distanceFromCenterMin, seed.distanceFromCenterMax)
-	return createRandomPositionInMap(mapSize, GameMapPosition{mapSize.MaxX/2,mapSize.MaxY/2, 0}, distanceFrom)
+	return createRandomPositionInMap(mapSize, GameMapPosition{mapSize.MaxX / 2, mapSize.MaxY / 2, 0}, distanceFrom)
 }
 
 //敵出現座標の一覧を返す
 func createEnemyStartPoints(difficult Difficult,
-mapSize GameMapSize,
-allyStartPoint GameMapPosition) []GameMapPosition {
-	type rangeFromAlly struct{
+	mapSize GameMapSize,
+	allyStartPoint GameMapPosition) []GameMapPosition {
+	type rangeFromAlly struct {
 		Min int
 		Max int
 	}
@@ -238,31 +250,49 @@ allyStartPoint GameMapPosition) []GameMapPosition {
 
 	switch difficult {
 	case easy:
-		sattyPointNum = lottery.GetRandomInt(1,3)
+		sattyPointNum = lottery.GetRandomInt(1, 3)
 		rangeFrom = rangeFromAlly{15, 30}
-		break;
+		break
 	case normal:
-		sattyPointNum = lottery.GetRandomInt(3,6)
+		sattyPointNum = lottery.GetRandomInt(3, 6)
 		rangeFrom = rangeFromAlly{8, 30}
-		break;
+		break
 	case hard:
-		sattyPointNum = lottery.GetRandomInt(5,10)
+		sattyPointNum = lottery.GetRandomInt(5, 10)
 		rangeFrom = rangeFromAlly{5, 30}
-		break;
+		break
 	case exhard:
-		sattyPointNum = lottery.GetRandomInt(10,20)
+		sattyPointNum = lottery.GetRandomInt(10, 20)
 		rangeFrom = rangeFromAlly{5, 30}
-		break;
+		break
 	}
 	var sattyPoints []GameMapPosition
-	for sattyPointNum > 0{
+	for sattyPointNum > 0 {
 		sattyPointNum--
 		//味方ポイントからの距離
 		distance := lottery.GetRandomInt(rangeFrom.Min, rangeFrom.Max)
 		sattyPoint := createRandomPositionInMap(mapSize, allyStartPoint, distance)
-		sattyPoints = append(sattyPoints , sattyPoint)
+		sattyPoints = append(sattyPoints, sattyPoint)
 	}
 	return sattyPoints
+}
+
+//見下ろしマップを返す
+func createXYMap(difficult Difficult,
+	mapSize GameMapSize,
+	geographical Geographical,
+	allyStartPoint GameMapPosition,
+	enemyStartPoints GameMapPosition) [][]MacroMapType {
+
+	//広場生成
+	createPlaza(allyStartPoint)
+
+	//道生成
+
+	//壁生成
+
+	//ラフ生成
+
 }
 
 //雑に100回まわしてみる
@@ -286,8 +316,7 @@ func flow() {
 	fmt.Printf("mapSize: %+v\n", mapSize)
 
 	//大まかな地形を決定
-	//geographical := createMapGeographical()
-	createMapGeographical()
+	geographical := createMapGeographical()
 
 	//味方開始ポイントを決定
 	allyStartPoint := createAllyStartPoint(difficult, mapSize)
@@ -295,21 +324,16 @@ func flow() {
 
 	//敵開始ポイントを決定
 	enemyStartPoints := createEnemyStartPoints(difficult, mapSize, allyStartPoint)
-	for _, enemyStartPoint := range enemyStartPoints {  // キーは使われません
+	for _, enemyStartPoint := range enemyStartPoints { // キーは使われません
 		fmt.Printf("enemyStartPoint: %+v\n", enemyStartPoint)
 	}
 
+	//見下ろしのマップを作成
+	createXYMap(difficult, mapSize, geographical, allyStartPoint, enemyStartPoints)
 
-	//広場生成
-
-	//道生成
-
-	//壁生成
-
-	//ラフ生成
+	//実際のパーツとのひも付け
 
 	//勾配生成
-
 
 	//バリデーション
 }
@@ -328,5 +352,3 @@ func createJsonFromMap() {
 func createPngFromMap() {
 
 }
-
-

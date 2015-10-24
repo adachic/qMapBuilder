@@ -36,6 +36,7 @@ func createRandomPositionInMap(mapSize GameMapSize, criteria GameMapPosition, di
 	if (y2 < 0) {
 		y2 = 0
 	}
+	//TODO:距離が守れてなければリトライ
 	return GameMapPosition{x2, y2, 0}
 }
 
