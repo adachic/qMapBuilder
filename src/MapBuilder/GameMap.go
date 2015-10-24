@@ -50,6 +50,13 @@ const (
 	GeographicalCastle Geographical = 4 + 10
 )
 
+//座標
+type GameMapPosition struct {
+	X int
+	Y int
+	Z int
+}
+
 //確率を返す
 func (d Difficult) Prob() int {
 	return int(d)
@@ -172,7 +179,7 @@ func createMapSize(difficult Difficult) GameMapSize {
 }
 
 //地形の抽選結果を返す
-func createMapGeographical() Geographical{
+func createMapGeographical() Geographical {
 	lot := lottery.New(rand.New(rand.NewSource(time.Now().UnixNano())))
 	geographicals := []lottery.Interface{
 		GeographicalStep,
@@ -189,18 +196,78 @@ func createMapGeographical() Geographical{
 	return geographicals[result].(Geographical)
 }
 
-func CreateGameMap(gamePartsDict map[string]GameParts) GameMap {
+//味方の出撃座標を返す
+func createAllyStartPoint(difficult Difficult, mapSize GameMapSize) GameMapPosition {
+	type distanceFromCenter struct {
+		distanceFromCenterMin int
+		distanceFromCenterMax int //これを下げると難しいのが作られやすい
+	}
+	var seed distanceFromCenter
+
+	//難度が高いと中央寄りになる
+	switch difficult {
+	case easy:
+		seed = distanceFromCenter{70, 100}
+		break;
+	case normal:
+		seed = distanceFromCenter{30, 80}
+		break;
+	case hard:
+		seed = distanceFromCenter{0, 50}
+		break;
+	case exhard:
+		seed = distanceFromCenter{0, 20}
+		break;
+	}
+	//中央からの距離比率
+	distanceFrom := lottery.GetRandomInt(seed.distanceFromCenterMin, seed.distanceFromCenterMax)
+	//角度
+	degree := lottery.GetRandomInt(0, 360)
+	radian := float64(degree) / (math.Pi * 2.0)
+	//半径
+	var r float64
+	if(mapSize.MaxX > mapSize.MaxY){
+		r = float64(mapSize.MaxX) / 2.0 * float64(distanceFrom) / 100.0
+	}else{
+		r = float64(mapSize.MaxY) / 2.0 * float64(distanceFrom) / 100.0
+	}
+	x := r * math.Cos(radian)
+	y := r * math.Sin(radian)
+	x2 := int(float64(mapSize.MaxX) / 2.0 + x)
+	y2 := int(float64(mapSize.MaxY) / 2.0 + y)
+
+	if(x2 >= mapSize.MaxX){
+		x2 = mapSize.MaxX - 1
+	}
+	if(x2 < 0){
+		x2 = 0
+	}
+	if(y2 >= mapSize.MaxY){
+		y2 = mapSize.MaxY - 1
+	}
+	if(y2 < 0){
+		y2 = 0
+	}
+	return GameMapPosition{x2, y2, 0}
+}
+
+//敵の出現座標の一覧を返す
+func createEnemyStartPoint() []GameMapPosition {
+
+	return nil
+}
+
+//雑に100回まわしてみる
+func bulc(){
 	x := 100
 	for x > 0 {
 		x--
-		//難易度を決定
-		difficult := createMapDifficult()
-		fmt.Printf("difficult: %+v\n", difficult)
-
-		//マップのサイズを決定
-		mapSize := createMapSize(difficult)
-		fmt.Printf("mapSize: %+v\n\n", mapSize)
+		flow()
+		fmt.Printf("\n")
 	}
+}
+
+func flow(){
 	//難易度を決定
 	difficult := createMapDifficult()
 	fmt.Printf("difficult: %+v\n", difficult)
@@ -211,11 +278,14 @@ func CreateGameMap(gamePartsDict map[string]GameParts) GameMap {
 
 	//大まかな地形を決定
 	//geographical := createMapGeographical()
-	 createMapGeographical()
+	createMapGeographical()
 
 	//味方開始ポイントを決定
+	allyStartPoint := createAllyStartPoint(difficult, mapSize)
+	fmt.Printf("allyStartPoint: %+v\n", allyStartPoint)
 
 	//敵開始ポイントを決定
+	//	createEnemyStartPoints()
 
 
 	//広場生成
@@ -230,6 +300,11 @@ func CreateGameMap(gamePartsDict map[string]GameParts) GameMap {
 
 
 	//バリデーション
+}
+
+func CreateGameMap(gamePartsDict map[string]GameParts) GameMap {
+	bulc()
+	//flow()
 
 	return GameMap{}
 }
