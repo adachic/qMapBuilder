@@ -2,6 +2,7 @@ package MapBuilder
 import (
 "github.com/adachic/lottery"
 "math"
+	"fmt"
 )
 
 //四角形のなかから座標を抽選で決定して返す
@@ -36,6 +37,18 @@ func createRandomPositionInMap(mapSize GameMapSize, criteria GameMapPosition, di
 	if (y2 < 0) {
 		y2 = 0
 	}
+	fmt.Print("distanceFrom:",distanceFrom,
+		" degree:",degree,
+		" radian:",radian,
+		" r:",r,
+		" x:",x,
+		" y:",y,
+		" x2:",x2,
+		" y2:",y2,
+		" criteriaX:",criteria.X,
+		" criteriaY:",criteria.Y,
+		"\n",
+	)
 	//TODO:距離が守れてなければリトライ
 	return GameMapPosition{x2, y2, 0}
 }

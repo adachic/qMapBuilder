@@ -256,19 +256,19 @@ func createEnemyStartPoints(difficult Difficult,
 	switch difficult {
 	case easy:
 		sattyPointNum = lottery.GetRandomInt(1, 3)
-		rangeFrom = rangeFromAlly{15, 30}
+		rangeFrom = rangeFromAlly{50, 100}
 		break
 	case normal:
 		sattyPointNum = lottery.GetRandomInt(3, 6)
-		rangeFrom = rangeFromAlly{8, 30}
+		rangeFrom = rangeFromAlly{30, 100}
 		break
 	case hard:
 		sattyPointNum = lottery.GetRandomInt(5, 10)
-		rangeFrom = rangeFromAlly{5, 30}
+		rangeFrom = rangeFromAlly{13, 100}
 		break
 	case exhard:
 		sattyPointNum = lottery.GetRandomInt(10, 20)
-		rangeFrom = rangeFromAlly{5, 30}
+		rangeFrom = rangeFromAlly{10, 100}
 		break
 	}
 	var sattyPoints []GameMapPosition
