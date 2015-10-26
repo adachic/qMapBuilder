@@ -71,15 +71,17 @@ enemyStartPoints []GameMapPosition) {
 	//敵用広場生成
 	for i := 0; i < len(enemyStartPoints); i++ {
 		plazaArea := lottery.GetRandomInt(plazaSizeRange.Min, plazaSizeRange.Max)
-		centerPoint := enemyStartPoints[1+i]
+		centerPoint := enemyStartPoints[i]
 		putLoadSquareFromCenter(plazaArea, xyMap, mapSize, centerPoint)
 	}
 	//余計な分生成
+	/*
 	for i := 0; i < additionalPlazaCount; i++ {
 		plazaArea := lottery.GetRandomInt(plazaSizeRange.Min, plazaSizeRange.Max)
-		centerPoint := enemyStartPoints[1+len(enemyStartPoints)+i]
+		centerPoint :=
 		putLoadSquareFromCenter(plazaArea, xyMap, mapSize, centerPoint)
 	}
+	*/
 }
 
 //不可侵領域で埋める
@@ -112,7 +114,7 @@ enemyStartPoints []GameMapPosition) [][]MacroMapType {
 	fillCantEnter(xyMap, mapSize)
 
 	//広場生成
-	//createPlaza(xyMap, difficult, mapSize, allyStartPoint, enemyStartPoints)
+	createPlaza(xyMap, difficult, mapSize, allyStartPoint, enemyStartPoints)
 
 	//道生成
 

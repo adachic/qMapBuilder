@@ -335,6 +335,8 @@ func printGameMap(xyMap [][]MacroMapType, mapSize GameMapSize){
 			switch(xyMap[y][x]){
 			case MacroMapTypeCantEnter:
 				fmt.Print("#")
+			case MacroMapTypeLoad:
+				fmt.Print(".")
 			}
 		}
 		fmt.Print("\n")
