@@ -65,6 +65,8 @@ const (
 	MacroMapTypeRough
 	MacroMapTypeWall
 	MacroMapTypeCantEnter //進入不可地形
+	MacroMapTypeAllyPoint
+	MacroMapTypeEnemyPoint
 )
 
 //座標
@@ -337,6 +339,10 @@ func printGameMap(xyMap [][]MacroMapType, mapSize GameMapSize){
 				fmt.Print("#")
 			case MacroMapTypeLoad:
 				fmt.Print(".")
+			case MacroMapTypeAllyPoint:
+				fmt.Print("A")
+			case MacroMapTypeEnemyPoint:
+				fmt.Print("E")
 			}
 		}
 		fmt.Print("\n")

@@ -65,6 +65,7 @@ func createRandomPositionInMap(mapSize GameMapSize, criteria GameMapPosition, di
 		)
 		break;
 	}
+	//TODO:限界リトライ数を定める
 	return GameMapPosition{x2, y2, 0}
 }
 

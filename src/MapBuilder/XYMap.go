@@ -116,6 +116,11 @@ enemyStartPoints []GameMapPosition) [][]MacroMapType {
 	//広場生成
 	createPlaza(xyMap, difficult, mapSize, allyStartPoint, enemyStartPoints)
 
+	xyMap[allyStartPoint.Y][allyStartPoint.X] = MacroMapTypeAllyPoint
+	for i := 0; i < len(enemyStartPoints); i++ {
+		xyMap[enemyStartPoints[i].Y][enemyStartPoints[i].X] = MacroMapTypeEnemyPoint
+	}
+
 	//道生成
 
 	//壁生成
