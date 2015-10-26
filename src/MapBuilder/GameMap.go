@@ -317,13 +317,28 @@ func flow() {
 	}
 
 	//見下ろしのマップを作成
-	createXYMap(difficult, mapSize, geographical, allyStartPoint, enemyStartPoints)
+	xyMap := createXYMap(difficult, mapSize, geographical, allyStartPoint, enemyStartPoints)
+	//dump
+	printGameMap(xyMap, mapSize)
 
 	//実際のパーツとのひも付け
 
 	//勾配生成
 
 	//バリデーション
+
+}
+
+func printGameMap(xyMap [][]MacroMapType, mapSize GameMapSize){
+	for y:=0 ; y < mapSize.MaxY ; y++ {
+		for x:=0 ; x < mapSize.MaxX ; x++ {
+			switch(xyMap[y][x]){
+			case MacroMapTypeCantEnter:
+				fmt.Print("#")
+			}
+		}
+		fmt.Print("\n")
+	}
 }
 
 func CreateGameMap(gamePartsDict map[string]GameParts) GameMap {
