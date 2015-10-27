@@ -1,11 +1,12 @@
-package MapBuilder
+package main
 
 import (
 	"fmt"
-	"github.com/adachic/lottery"
 	"math"
 	"math/rand"
 	"time"
+
+	"github.com/adachic/lottery"
 )
 
 //マップ
@@ -22,7 +23,7 @@ type GameMapSize struct {
 }
 
 //面積
-func (s GameMapSize) area() int{
+func (s GameMapSize) area() int {
 	return s.MaxY * s.MaxX
 }
 
@@ -284,7 +285,6 @@ func createEnemyStartPoints(difficult Difficult,
 	return sattyPoints
 }
 
-
 //雑に100回まわしてみる
 func bulc() {
 	x := 100
@@ -331,10 +331,10 @@ func flow() {
 
 }
 
-func printGameMap(xyMap [][]MacroMapType, mapSize GameMapSize){
-	for y:=0 ; y < mapSize.MaxY ; y++ {
-		for x:=0 ; x < mapSize.MaxX ; x++ {
-			switch(xyMap[y][x]){
+func printGameMap(xyMap [][]MacroMapType, mapSize GameMapSize) {
+	for y := 0; y < mapSize.MaxY; y++ {
+		for x := 0; x < mapSize.MaxX; x++ {
+			switch xyMap[y][x] {
 			case MacroMapTypeCantEnter:
 				fmt.Print("#")
 			case MacroMapTypeLoad:
