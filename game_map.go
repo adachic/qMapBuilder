@@ -108,23 +108,27 @@ func (game_map *GameMap) init(condition GameMapCondition) *GameMap{
 		fmt.Printf("enemyStartPoint: %+v\n", enemyStartPoint)
 	}
 
-	//2次元マップの生成
+	//2次元マップ生成
 	{
 		xymap := NewXYMap(game_map.Size)
-		//広場生成
+
+		//広場配置
 		xymap.putPlazas(game_map.difficult, game_map.AllyStartPoint, game_map.EnemyStartPoints)
 
-		//味方、敵ポイント描画
+		//道配置
+		xymap.putRoads(game_map.difficult, game_map.AllyStartPoint, game_map.EnemyStartPoints)
+
+		//壁配置
+
+		//ラフ配置
+
+		//味方、敵ポイント
 		xymap.putPoint(game_map.AllyStartPoint, MacroMapTypeAllyPoint)
 		for i := 0; i < len(game_map.EnemyStartPoints); i++ {
 			xymap.putPoint(game_map.EnemyStartPoints[i], MacroMapTypeEnemyPoint)
 		}
 
-		//道生成
-
-		//壁生成
-
-		//ラフ生成
+		//dump
 		xymap.printMapForDebug()
 	}
 

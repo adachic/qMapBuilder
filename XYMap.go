@@ -107,6 +107,70 @@ func (xy *xymap) putPoint(point GameMapPosition, macroMapType MacroMapType){
 	xy.matrix[point.Y][point.X] = macroMapType
 }
 
+//道を引く
+func (xy *xymap) putRoads(
+difficult Difficult,
+allyStartPoint GameMapPosition,
+enemyStartPoints []GameMapPosition) {
+
+
+	mapPositions := make([]GameMapPosition, 0)
+	{
+		append(mapPositions, allyStartPoint)
+		for i := 0 ; i < len(enemyStartPoints) ; i++ {
+			append(mapPositions, enemyStartPoints[i])
+		}
+	}
+
+	pathPositions := make([]PathPosition,0)
+	//何をつなげるか
+	for i := 0 ; i< len(mapPositions); i++{
+		alreadyPos := make([]GameMapPosition, 0)
+
+		src := pathPositions[i]
+		append(alreadyPos, src)
+
+		//いくつのポイントとつなげるか
+		maxPosIdx := len(mapPositions - 1)
+		if (maxPosIdx < 1){
+			maxPosIdx = 1
+		}
+		pathNum := lottery.GetRandomInt(1, maxPosIdx)
+
+		//何とつなげるか
+		for j := 0 ; j< pathNum ; j++ {
+			aho:
+			dstPosIdx := lottery.GetRandomInt(0, maxPosIdx)
+			for k := 0; k < len(alreadyPos); k++ {
+				if alreadyPos[k] == mapPositions[dstPosIdx] {
+					break aho
+				}
+			}
+			append(alreadyPos, mapPositions[dstPosIdx])
+			append(pathPositions, PathPosition{src, mapPositions[dstPosIdx]})
+		}
+	}
+
+	//それぞれの道生成
+	for i := 0 ; i< len(pathPositions) ; i++ {
+		xy.putRoad(pathPositions[i])
+	}
+}
+
+type PathPosition struct {
+	src GameMapPosition
+	dst GameMapPosition
+}
+
+//道を引く
+func (xy *xymap) putRoad(pathPosition PathPosition){
+	//どの程度うねるか
+
+	//法線ベクトル
+
+
+}
+
 func (xy *xymap) printMapForDebug() {
 	for y := 0; y < xy.mapSize.MaxY; y++ {
 		for x := 0; x < xy.mapSize.MaxX; x++ {
