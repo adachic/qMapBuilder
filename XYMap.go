@@ -2,59 +2,47 @@ package main
 
 import (
 	"math"
-
 	"github.com/adachic/lottery"
+	"fmt"
 )
 
-type Range struct {
-	Min int
-	Max int
+type xymap struct {
+	mapSize GameMapSize
+	matrix [][]MacroMapType
 }
 
-//centerPointを中心として、正方形に道を描画する(面積はplazaArea)
-func putLoadSquareFromCenter(
-	plazaArea int,
-	xyMap [][]MacroMapType,
-	mapSize GameMapSize,
-	centerPoint GameMapPosition) {
+func NewXYMap(mapSize GameMapSize) *xymap{
+	xy := &xymap{}
+	return xy.init(mapSize)
+}
 
-	sideLength := int(math.Sqrt(float64(plazaArea)))
-	if sideLength <= 0 {
-		sideLength = 1
+
+func (xy *xymap) init(mapSize GameMapSize) *xymap{
+	xy.mapSize = mapSize
+	xy.matrix = make([][]MacroMapType, mapSize.MaxY)
+	for y := 0; y < mapSize.MaxY; y++ {
+		xy.matrix[y] = make([]MacroMapType, mapSize.MaxX)
 	}
-	offsStart := -sideLength / 2
-	offsEnd := sideLength / 2
+	xy.fillCantEnter()
+	return xy
+}
 
-	//広場生成(正方形)
-	for offsX := offsStart; offsX <= offsEnd; offsX++ {
-		for offsY := offsStart; offsY <= offsEnd; offsY++ {
-			x2 := centerPoint.X + offsX
-			y2 := centerPoint.Y + offsY
-			if x2 >= mapSize.MaxX {
-				x2 = mapSize.MaxX - 1
-			}
-			if x2 < 0 {
-				x2 = 0
-			}
-			if y2 >= mapSize.MaxY {
-				y2 = mapSize.MaxY - 1
-			}
-			if y2 < 0 {
-				y2 = 0
-			}
-			xyMap[y2][x2] = MacroMapTypeLoad
+//不可侵領域で埋める
+func (xy *xymap) fillCantEnter() {
+	for x := 0; x < xy.mapSize.MaxX; x++ {
+		for y := 0; y < xy.mapSize.MaxY; y++ {
+			xy.matrix[y][x] = MacroMapTypeCantEnter
 		}
 	}
 }
 
 //広場生成
-func createPlaza(xyMap [][]MacroMapType,
-	difficult Difficult,
-	mapSize GameMapSize,
-	allyStartPoint GameMapPosition,
-	enemyStartPoints []GameMapPosition) {
+func (xy *xymap) putPlazas(
+difficult Difficult,
+allyStartPoint GameMapPosition,
+enemyStartPoints []GameMapPosition) {
 
-	area := mapSize.area()
+	area := xy.mapSize.area()
 
 	//余計に広場を追加？
 	additionalPlazaCount := lottery.GetRandomInt(0, 5)
@@ -68,65 +56,71 @@ func createPlaza(xyMap [][]MacroMapType,
 	{
 		plazaArea := lottery.GetRandomInt(plazaSizeRange.Min, plazaSizeRange.Max)
 		centerPoint := allyStartPoint
-		putLoadSquareFromCenter(plazaArea, xyMap, mapSize, centerPoint)
+		xy.putPlaza(plazaArea, centerPoint)
 	}
+
 	//敵用広場生成
 	for i := 0; i < len(enemyStartPoints); i++ {
 		plazaArea := lottery.GetRandomInt(plazaSizeRange.Min, plazaSizeRange.Max)
 		centerPoint := enemyStartPoints[i]
-		putLoadSquareFromCenter(plazaArea, xyMap, mapSize, centerPoint)
-	}
-	//余計な分生成
-	/*
-		for i := 0; i < additionalPlazaCount; i++ {
-			plazaArea := lottery.GetRandomInt(plazaSizeRange.Min, plazaSizeRange.Max)
-			centerPoint :=
-			putLoadSquareFromCenter(plazaArea, xyMap, mapSize, centerPoint)
-		}
-	*/
-}
-
-//不可侵領域で埋める
-func fillCantEnter(xyMap [][]MacroMapType, mapSize GameMapSize) {
-	for x := 0; x < mapSize.MaxX; x++ {
-		for y := 0; y < mapSize.MaxY; y++ {
-			xyMap[y][x] = MacroMapTypeCantEnter
-		}
+		xy.putPlaza(plazaArea, centerPoint)
 	}
 }
 
-//見下ろしマップを返す
-func createXYMap(difficult Difficult,
-	mapSize GameMapSize,
-	geographical Geographical,
-	allyStartPoint GameMapPosition,
-	enemyStartPoints []GameMapPosition) [][]MacroMapType {
+//広場生成
+//centerPointを中心として、正方形に道を描画する(面積はplazaArea)
+func (xy *xymap) putPlaza(
+plazaArea int,
+centerPoint GameMapPosition) {
 
-	//	var xyMap [mapSize.MaxX][mapSize.MaxY]MacroMapType
-	//	xyMap := new([mapSize.MaxX][mapSize.MaxY]MacroMapType)
-	//	var xyMap [10][10]MacroMapType
-
-	xyMap := make([][]MacroMapType, mapSize.MaxY, mapSize.MaxY)
-	for y := 0; y < mapSize.MaxY; y++ {
-		xyMap[y] = make([]MacroMapType, mapSize.MaxX, mapSize.MaxX)
+	sideLength := int(math.Sqrt(float64(plazaArea)))
+	if sideLength <= 0 {
+		sideLength = 1
 	}
+	offsStart := -sideLength / 2
+	offsEnd := sideLength / 2
 
-	//不可侵領域で埋める
-	fillCantEnter(xyMap, mapSize)
-
-	//広場生成
-	createPlaza(xyMap, difficult, mapSize, allyStartPoint, enemyStartPoints)
-
-	xyMap[allyStartPoint.Y][allyStartPoint.X] = MacroMapTypeAllyPoint
-	for i := 0; i < len(enemyStartPoints); i++ {
-		xyMap[enemyStartPoints[i].Y][enemyStartPoints[i].X] = MacroMapTypeEnemyPoint
+	//広場生成(正方形)
+	for offsX := offsStart; offsX <= offsEnd; offsX++ {
+		for offsY := offsStart; offsY <= offsEnd; offsY++ {
+			x2 := centerPoint.X + offsX
+			y2 := centerPoint.Y + offsY
+			if x2 >= xy.mapSize.MaxX {
+				x2 = xy.mapSize.MaxX - 1
+			}
+			if x2 < 0 {
+				x2 = 0
+			}
+			if y2 >= xy.mapSize.MaxY {
+				y2 = xy.mapSize.MaxY - 1
+			}
+			if y2 < 0 {
+				y2 = 0
+			}
+			xy.matrix[y2][x2] = MacroMapTypeLoad
+		}
 	}
+}
 
-	//道生成
+//pointをmacroMapTypeにする
+func (xy *xymap) putPoint(point GameMapPosition, macroMapType MacroMapType){
+	xy.matrix[point.Y][point.X] = macroMapType
+}
 
-	//壁生成
-
-	//ラフ生成
-
-	return xyMap
+func (xy *xymap) printMapForDebug() {
+	for y := 0; y < xy.mapSize.MaxY; y++ {
+		for x := 0; x < xy.mapSize.MaxX; x++ {
+			switch xy.matrix[y][x] {
+			case MacroMapTypeCantEnter:
+				fmt.Print("#")
+			case MacroMapTypeLoad:
+				fmt.Print(".")
+			case MacroMapTypeAllyPoint:
+				fmt.Print("A")
+			case MacroMapTypeEnemyPoint:
+				fmt.Print("E")
+			}
+		}
+		fmt.Print("\n")
+	}
 }

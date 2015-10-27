@@ -9,12 +9,6 @@ import (
 	"github.com/adachic/lottery"
 )
 
-//マップ
-type GameMap struct {
-	Size      GameMapSize
-	JungleGym [][][]GameParts
-}
-
 //マップの大きさ
 type GameMapSize struct {
 	MaxX int
@@ -29,7 +23,6 @@ func (s GameMapSize) area() int {
 
 //マップの難度
 type Difficult int
-
 const (
 	easy   Difficult = 10
 	normal Difficult = 3
@@ -39,7 +32,6 @@ const (
 
 //長方形の形式
 type RectForm int
-
 const (
 	horizontalLong RectForm = 6 //横長
 	verticalLong   RectForm = 5
@@ -48,7 +40,6 @@ const (
 
 //地形
 type Geographical int
-
 const (
 	GeographicalStep     Geographical = 14 + 10
 	GeographicalMountain Geographical = 9 + 10
@@ -59,8 +50,8 @@ const (
 	GeographicalCastle   Geographical = 4 + 10
 )
 
+//マップメタ(ここから詳細なパーツを決定)
 type MacroMapType int
-
 const (
 	MacroMapTypeLoad = iota
 	MacroMapTypeRough
@@ -90,8 +81,58 @@ func (d Geographical) Prob() int {
 	return int(d)
 }
 
+func NewGameMap(condition GameMapCondition) *GameMap{
+	game_map := &GameMap{}
+	return game_map.init(condition)
+}
+
+func (game_map *GameMap) init(condition GameMapCondition) *GameMap{
+	//難易度を初期化
+	game_map.initMapDifficult()
+	fmt.Printf("difficult: %+v\n", game_map.difficult)
+
+	//マップのサイズを初期化
+	game_map.initMapSize()
+	fmt.Printf("mapSize: %+v\n", game_map.Size)
+
+	//大まかな地形を初期化
+	game_map.initMapGeographical()
+
+	//味方開始ポイントを初期化
+	game_map.initAllyStartPoint()
+	fmt.Printf("allyStartPoint: %+v\n", game_map.AllyStartPoint)
+
+	//敵開始ポイントを決定
+	game_map.initEnemyStartPoints()
+	for _, enemyStartPoint := range game_map.EnemyStartPoints { // キーは使われません
+		fmt.Printf("enemyStartPoint: %+v\n", enemyStartPoint)
+	}
+
+	//2次元マップの生成
+	{
+		xymap := NewXYMap(game_map.Size)
+		//広場生成
+		xymap.putPlazas(game_map.difficult, game_map.AllyStartPoint, game_map.EnemyStartPoints)
+
+		//味方、敵ポイント描画
+		xymap.putPoint(game_map.AllyStartPoint, MacroMapTypeAllyPoint)
+		for i := 0; i < len(game_map.EnemyStartPoints); i++ {
+			xymap.putPoint(game_map.EnemyStartPoints[i], MacroMapTypeEnemyPoint)
+		}
+
+		//道生成
+
+		//壁生成
+
+		//ラフ生成
+		xymap.printMapForDebug()
+	}
+
+	return game_map
+}
+
 //マップ難易度の抽選結果を返す
-func createMapDifficult() Difficult {
+func (game_map *GameMap) initMapDifficult() {
 	lot := lottery.New(rand.New(rand.NewSource(time.Now().UnixNano())))
 	difficults := []lottery.Interface{
 		easy,
@@ -102,87 +143,18 @@ func createMapDifficult() Difficult {
 	result := lot.Lots(
 		difficults...,
 	)
-	return difficults[result].(Difficult)
+	game_map.difficult = difficults[result].(Difficult)
 }
 
-//長方形の形式の抽選結果を返す
-func createRectForm() RectForm {
-	lot := lottery.New(rand.New(rand.NewSource(time.Now().UnixNano())))
-	forms := []lottery.Interface{
-		horizontalLong,
-		verticalLong,
-		square,
-	}
-	result := lot.Lots(
-		forms...,
-	)
-	return forms[result].(RectForm)
-}
-
-// x/yのRatioを返す
-func createAspectOfRectFrom(rectForm RectForm) float32 {
-	var ret float32
-	var longer int
-	var shorter int
-
-	const minLength = 3
-	const maxLength = 10
-
-	x := lottery.GetRandomNormInt(minLength, maxLength)
-	y := (minLength + maxLength) - x
-	if x > y {
-		longer = x
-		shorter = y
-	} else {
-		longer = y
-		shorter = x
-	}
-
-	fmt.Printf("longer: %+v\n", longer)
-	fmt.Printf("shorter: %+v\n", shorter)
-	switch rectForm {
-	case horizontalLong:
-		ret = float32(longer) / float32(shorter)
-		break
-	case verticalLong:
-		ret = float32(shorter) / float32(longer)
-		break
-	case square:
-		ret = 1.0
-		break
-	}
-	return ret
-}
-
-//マップ面積を返す
-func createArea(difficult Difficult) int {
-	var ret int
-	//10x10を最小とし、30x30を最大とする
-	switch difficult {
-	case easy:
-		ret = lottery.GetRandomInt(10*10, 15*15)
-		break
-	case normal:
-		ret = lottery.GetRandomInt(10*10, 25*25)
-		break
-	case hard:
-		ret = lottery.GetRandomInt(15*15, 30*30)
-		break
-	case exhard:
-		ret = lottery.GetRandomInt(15*15, 30*30)
-		break
-	}
-	return ret
-}
 
 //マップサイズの抽選結果を返す
-func createMapSize(difficult Difficult) GameMapSize {
+func (game_map *GameMap) initMapSize() {
 	//横長か縦長か
-	rectForm := createRectForm()
+	rectForm := CreateRectForm()
 	//x/yアスペクト比
-	aspect := createAspectOfRectFrom(rectForm)
+	aspect := CreateAspectOfRectFrom(rectForm)
 	//面積
-	area := createArea(difficult)
+	area := CreateArea(game_map.difficult)
 
 	fmt.Printf("form: %+v\n", rectForm)
 	fmt.Printf("area: %+v\n", area)
@@ -195,11 +167,11 @@ func createMapSize(difficult Difficult) GameMapSize {
 	}
 	x := int(area / y)
 
-	return GameMapSize{x, y, 30}
+	game_map.Size = GameMapSize{x, y, 30}
 }
 
 //地形の抽選結果を返す
-func createMapGeographical() Geographical {
+func (game_map *GameMap) initMapGeographical() {
 	lot := lottery.New(rand.New(rand.NewSource(time.Now().UnixNano())))
 	geographicals := []lottery.Interface{
 		GeographicalStep,
@@ -213,40 +185,37 @@ func createMapGeographical() Geographical {
 	result := lot.Lots(
 		geographicals...,
 	)
-	return geographicals[result].(Geographical)
+	game_map.Geographical = geographicals[result].(Geographical)
 }
 
 //味方の出撃座標を返す
-func createAllyStartPoint(difficult Difficult, mapSize GameMapSize) GameMapPosition {
-	type distanceFromCenter struct {
-		distanceFromCenterMin int
-		distanceFromCenterMax int //これを下げると難しいのが作られやすい
-	}
-	var seed distanceFromCenter
-
+func (game_map *GameMap) initAllyStartPoint() {
+	var seed Range
 	//難度が高いと中央寄りになる
-	switch difficult {
+	switch game_map.difficult{
 	case easy:
-		seed = distanceFromCenter{70, 100}
+		seed = Range{70, 100}
 		break
 	case normal:
-		seed = distanceFromCenter{30, 80}
+		seed = Range{30, 80}
 		break
 	case hard:
-		seed = distanceFromCenter{0, 50}
+		seed = Range{0, 50}
 		break
 	case exhard:
-		seed = distanceFromCenter{0, 20}
+		seed = Range{0, 20}
 		break
 	}
-	distanceFrom := lottery.GetRandomInt(seed.distanceFromCenterMin, seed.distanceFromCenterMax)
-	return createRandomPositionInMap(mapSize, GameMapPosition{mapSize.MaxX / 2, mapSize.MaxY / 2, 0}, distanceFrom)
+	fmt.Print("seed",seed.Min," ",seed.Max)
+	distanceFrom := lottery.GetRandomInt(seed.Min, seed.Max)
+	game_map.AllyStartPoint = CreateRandomPositionInMap(
+		game_map.Size,
+		GameMapPosition{game_map.Size.MaxX / 2, game_map.Size.MaxY / 2, 0},
+		distanceFrom)
 }
 
 //敵出現座標の一覧を返す
-func createEnemyStartPoints(difficult Difficult,
-	mapSize GameMapSize,
-	allyStartPoint GameMapPosition) []GameMapPosition {
+func (game_map *GameMap) initEnemyStartPoints(){
 	type rangeFromAlly struct {
 		Min int
 		Max int
@@ -256,7 +225,7 @@ func createEnemyStartPoints(difficult Difficult,
 	//敵出撃座標の数
 	var sattyPointNum int
 
-	switch difficult {
+	switch game_map.difficult{
 	case easy:
 		sattyPointNum = lottery.GetRandomInt(1, 3)
 		rangeFrom = rangeFromAlly{50, 100}
@@ -279,87 +248,18 @@ func createEnemyStartPoints(difficult Difficult,
 		sattyPointNum--
 		//味方ポイントからの距離
 		distance := lottery.GetRandomInt(rangeFrom.Min, rangeFrom.Max)
-		sattyPoint := createRandomPositionInMap(mapSize, allyStartPoint, distance)
+		sattyPoint := CreateRandomPositionInMap(game_map.Size, game_map.AllyStartPoint, distance)
 		sattyPoints = append(sattyPoints, sattyPoint)
 	}
-	return sattyPoints
+	game_map.EnemyStartPoints = sattyPoints
 }
 
-//雑に100回まわしてみる
-func bulc() {
-	x := 100
-	for x > 0 {
-		x--
-		flow()
-		fmt.Printf("\n")
-	}
-}
-
-//基本フロー
-func flow() {
-	//難易度を決定
-	difficult := createMapDifficult()
-	fmt.Printf("difficult: %+v\n", difficult)
-
-	//マップのサイズを決定
-	mapSize := createMapSize(difficult)
-	fmt.Printf("mapSize: %+v\n", mapSize)
-
-	//大まかな地形を決定
-	geographical := createMapGeographical()
-
-	//味方開始ポイントを決定
-	allyStartPoint := createAllyStartPoint(difficult, mapSize)
-	fmt.Printf("allyStartPoint: %+v\n", allyStartPoint)
-
-	//敵開始ポイントを決定
-	enemyStartPoints := createEnemyStartPoints(difficult, mapSize, allyStartPoint)
-	for _, enemyStartPoint := range enemyStartPoints { // キーは使われません
-		fmt.Printf("enemyStartPoint: %+v\n", enemyStartPoint)
-	}
-
-	//見下ろしのマップを作成
-	xyMap := createXYMap(difficult, mapSize, geographical, allyStartPoint, enemyStartPoints)
-	//dump
-	printGameMap(xyMap, mapSize)
-
-	//実際のパーツとのひも付け
-
-	//勾配生成
-
-	//バリデーション
-
-}
-
-func printGameMap(xyMap [][]MacroMapType, mapSize GameMapSize) {
-	for y := 0; y < mapSize.MaxY; y++ {
-		for x := 0; x < mapSize.MaxX; x++ {
-			switch xyMap[y][x] {
-			case MacroMapTypeCantEnter:
-				fmt.Print("#")
-			case MacroMapTypeLoad:
-				fmt.Print(".")
-			case MacroMapTypeAllyPoint:
-				fmt.Print("A")
-			case MacroMapTypeEnemyPoint:
-				fmt.Print("E")
-			}
-		}
-		fmt.Print("\n")
-	}
-}
-
-func CreateGameMap(gamePartsDict map[string]GameParts) GameMap {
-	bulc()
-	//flow()
-
-	return GameMap{}
-}
-
-func createJsonFromMap() {
-
-}
-
-func createPngFromMap() {
-
+//マップ
+type GameMap struct {
+	JungleGym [][][]GameParts
+	Size      GameMapSize
+	difficult Difficult
+	Geographical Geographical
+	AllyStartPoint GameMapPosition
+	EnemyStartPoints []GameMapPosition
 }
