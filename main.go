@@ -1,19 +1,23 @@
 package main
 
 import (
-	"flag"
+//	"flag"
 	"fmt"
 )
 
+var gamePartsDict map[string]GameParts
+
 func main() {
 	fmt.Printf("Hello, world.\n")
+	/*
 	var filePath string
 	flag.StringVar(&filePath, "file", "せつめい", "APP_PARTS_FILE_PATH")
 	flag.Parse()
+	*/
 
 	//pre;
 	//- [] パーツ情報のロード
-//	gamePartsDict := CreateGamePartsDict(filePath)
+	gamePartsDict = CreateGamePartsDict("./AppParts.json")
 
 	//loop;
 	//- [] アルゴリズムで自動生成
@@ -38,13 +42,17 @@ func main() {
 //基本フロー
 func flow(condition GameMapCondition) {
 	//マップ生成
-	NewGameMap(condition)
+	game_map := NewGameMap(condition)
 
 	//実際のパーツとのひも付け
-
-	//勾配生成
+	game_map.bindToGameParts(gamePartsDict)
 
 	//バリデーション
+
+	//描画
+
+	//json_export
+
 
 }
 

@@ -162,7 +162,6 @@ func (game_map *GameMap) init(condition GameMapCondition) *GameMap {
 
 		//ラフ配置
 
-
 		//味方、敵ポイント
 		xymap.putPoint(game_map.AllyStartPoint, MacroMapTypeAllyPoint)
 		for i := 0; i < len(game_map.EnemyStartPoints); i++ {
@@ -172,11 +171,16 @@ func (game_map *GameMap) init(condition GameMapCondition) *GameMap {
 		//勾配を生成
 		xymap.makeGradient(game_map.Geographical)
 
+		//水、毒沼配置
+
+		//alloc/init
+		game_map.allocToJungleGym(xymap)
+
 		//dump
 		xymap.printMapForDebug()
 	}
 
-	//水、毒沼配置
+
 	return game_map
 }
 
@@ -312,4 +316,25 @@ type GameMap struct {
 	Geographical     Geographical
 	AllyStartPoint   GameMapPosition
 	EnemyStartPoints []GameMapPosition
+}
+
+func (game_map *GameMap) allocToJungleGym(xy *xymap) {
+	game_map.JungleGym = make([][][]GameParts, game_map.Size.MaxZ)
+	for z := 0; z < game_map.Size.MaxZ; z++ {
+		game_map.JungleGym[z] = make([][]GameParts, game_map.Size.MaxY)
+		for y := 0; y < game_map.Size.MaxY; y++ {
+			game_map.JungleGym[z][y] = make([]GameParts, game_map.Size.MaxX)
+		}
+	}
+
+	//ここでxyをjungleGymへ移行作業
+
+	//パーツとのひも付けもこのクラスでやってよいのでは
+
+}
+
+//パーツとのひも付け
+func (game_map *GameMap) bindToGameParts(gamePartsDict map[string]GameParts) {
+	//雑に地形ごとに全部わりあててみる
+
 }
