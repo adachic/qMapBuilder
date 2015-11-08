@@ -198,6 +198,12 @@ func (xy *xymap) putRoadStraight(path PathPosition){
 	// y = ax + b
 	offsY := float64(path.dst.Y) - float64(path.src.Y)
 	offsX := float64(path.dst.X) - float64(path.src.X)
+	if(path.dst.X == path.src.X){
+		offsX = 0.01
+	}
+	if(path.dst.Y == path.src.Y){
+		offsY = 0.01
+	}
 	a := offsY / offsX
 	b := float64(path.src.Y) + 0.5 - a * (float64(path.src.X) + 0.5)
 
