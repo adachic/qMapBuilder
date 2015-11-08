@@ -158,18 +158,24 @@ func (game_map *GameMap) init(condition GameMapCondition) *GameMap {
 
 		//ラフ配置
 
+
 		//味方、敵ポイント
 		xymap.putPoint(game_map.AllyStartPoint, MacroMapTypeAllyPoint)
 		for i := 0; i < len(game_map.EnemyStartPoints); i++ {
 			xymap.putPoint(game_map.EnemyStartPoints[i], MacroMapTypeEnemyPoint)
 		}
 
+		//勾配を生成
+		xymap.makeGradient(game_map.Geographical)
+
 		//dump
 		xymap.printMapForDebug()
 	}
 
+	//水、毒沼配置
 	return game_map
 }
+
 
 //マップ難易度の抽選結果を返す
 func (game_map *GameMap) initMapDifficult() {

@@ -8,14 +8,14 @@ import (
 
 type xymap struct {
 	mapSize GameMapSize
-	matrix [][]MacroMapType
+	matrix [][]MacroMapType //種別
+	high [][]int //高さ
 }
 
 func NewXYMap(mapSize GameMapSize) *xymap{
 	xy := &xymap{}
 	return xy.init(mapSize)
 }
-
 
 func (xy *xymap) init(mapSize GameMapSize) *xymap{
 	xy.mapSize = mapSize
@@ -24,7 +24,23 @@ func (xy *xymap) init(mapSize GameMapSize) *xymap{
 		xy.matrix[y] = make([]MacroMapType, mapSize.MaxX)
 	}
 	xy.fillCantEnter()
+
+	xy.high = make([][]int, mapSize.MaxY)
+	for y := 0; y < mapSize.MaxY; y++ {
+		xy.high[y] = make([]int, mapSize.MaxX)
+	}
+	xy.fillHeightZero()
+
 	return xy
+}
+
+//高さ0で埋める
+func (xy *xymap) fillHeightZero() {
+	for x := 0; x < xy.mapSize.MaxX; x++ {
+		for y := 0; y < xy.mapSize.MaxY; y++ {
+			xy.high[y][x] = 1
+		}
+	}
 }
 
 //不可侵領域で埋める
@@ -311,6 +327,65 @@ func (xy *xymap) printMapForDebug() {
 				fmt.Print("E")
 			}
 		}
+		fmt.Print("   ")
+		for x := 0; x < xy.mapSize.MaxX; x++ {
+			fmt.Print(xy.high[y][x])
+		}
 		fmt.Print("\n")
+	}
+}
+
+//勾配を生成
+//ルール: x,yが大きいほど高い
+func (xy *xymap) makeGradient(geo Geographical) {
+	rowestHigh := 0
+	//まず地形でだいたいの高さ
+	switch geo {
+	case GeographicalStep    :
+		rowestHigh = 3
+		break
+	case GeographicalMountain:
+		rowestHigh = 7
+		break
+	case GeographicalCave    :
+		rowestHigh = 7
+		break
+	case GeographicalFort    :
+		rowestHigh = 4
+		break
+	case GeographicalShrine  :
+		rowestHigh = 4
+		break
+	case GeographicalTown    :
+		rowestHigh = 4
+		break
+	case GeographicalCastle  :
+		rowestHigh = 4
+		break
+	}
+
+	//手前から道の高さを調整していく（歩けるように高さ調整していく）
+	xy.makeGradientRoad(rowestHigh)
+
+	//だんだんと段差になっていく
+
+
+	//それ以外のところは2個あがったり下がったりさせる
+}
+
+//手前から道の高さを調整していく（歩けるように高さ調整していく）
+func (xy *xymap) makeGradientRoad(rowestHigh int) {
+	currentHeight := rowestHigh
+	for y := 0; y < xy.mapSize.MaxY; y++ {
+		for x := 0; x < xy.mapSize.MaxX; x++ {
+			switch xy.matrix[y][x] {
+			case MacroMapTypeLoad:
+				fallthrough
+			case MacroMapTypeAllyPoint:
+				fallthrough
+			case MacroMapTypeEnemyPoint:
+				xy.high[y][x] = currentHeight
+			}
+		}
 	}
 }
