@@ -145,57 +145,24 @@ enemyStartPoints []GameMapPosition) {
 		src := mapPositions[i]
 
 		//最も近いポイントを検索
-		dst ,err := src.searchNearPositionWithOutMe(mapPositions)
+		dst ,err := src.searchNearPositionWithOutMe(mapPositions, alreadyPutPathPositions)
 		if(err){
 			//近いポイントなかったマン(ありえない)
+			continue
 		}
 
 		path := PathPosition{src, dst}
+		/*
 		if (containsPath(alreadyPutPathPositions, path)){
 			//すでに道はひかれている
 			continue
 		}
+		*/
 
 		//直線道路を引く
 		xy.putRoadStraight(path)
-
 		alreadyPutPathPositions = append(alreadyPutPathPositions, path)
 	}
-
-	/*
-	//何をつなげるか
-	for i := 0 ; i< len(mapPositions); i++{
-		alreadyPos := make([]GameMapPosition, 0)
-
-		src := pathPositions[i]
-		append(alreadyPos, src)
-
-		//いくつのポイントとつなげるか
-		maxPosIdx := len(mapPositions - 1)
-		if (maxPosIdx < 1){
-			maxPosIdx = 1
-		}
-		pathNum := lottery.GetRandomInt(1, maxPosIdx)
-
-		//何とつなげるか
-		for j := 0 ; j< pathNum ; j++ {
-			aho:
-			dstPosIdx := lottery.GetRandomInt(0, maxPosIdx)
-			for k := 0; k < len(alreadyPos); k++ {
-				if alreadyPos[k] == mapPositions[dstPosIdx] {
-					break aho
-				}
-			}
-			append(alreadyPos, mapPositions[dstPosIdx])
-			append(pathPositions, PathPosition{src, mapPositions[dstPosIdx]})
-		}
-	}
-
-	//それぞれの道生成
-	for i := 0 ; i< len(pathPositions) ; i++ {
-		xy.putRoad(pathPositions[i])
-	}
-	*/
 }
 
 //道(直線)

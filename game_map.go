@@ -62,9 +62,9 @@ const (
 )
 
 
-//自分を除く最も近いポイントを返す
+//alreadyに登録されてなくて自分を除く最も近いポイントを返す
 //errがtrueなら見つからなかった
-func (pos GameMapPosition) searchNearPositionWithOutMe(positions []GameMapPosition) (nearPos GameMapPosition, err bool) {
+func (pos GameMapPosition) searchNearPositionWithOutMe(positions []GameMapPosition, alreadys []PathPosition) (nearPos GameMapPosition, err bool) {
 	err = true;
 	minDistance := 10000
 	for i := 0; i < len(positions); i++ {
@@ -72,10 +72,14 @@ func (pos GameMapPosition) searchNearPositionWithOutMe(positions []GameMapPositi
 		if(pos.equalXYTo(tgtPos)){
 			continue
 		}
+		if(containsPath(alreadys, PathPosition{pos, tgtPos})){
+			continue
+		}
 		distance := pos.distance(tgtPos)
 		if(distance < minDistance){
 			minDistance = distance
 			nearPos = tgtPos
+			err = false
 		}
 	}
 	return nearPos, err
