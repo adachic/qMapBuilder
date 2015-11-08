@@ -112,17 +112,41 @@ func (xy *xymap) putRoads(
 difficult Difficult,
 allyStartPoint GameMapPosition,
 enemyStartPoints []GameMapPosition) {
-
+	//最も近いポイントに単純に線を引く方式
 
 	mapPositions := make([]GameMapPosition, 0)
 	{
-		append(mapPositions, allyStartPoint)
+		mapPositions = append(mapPositions, allyStartPoint)
 		for i := 0 ; i < len(enemyStartPoints) ; i++ {
-			append(mapPositions, enemyStartPoints[i])
+			mapPositions = append(mapPositions, enemyStartPoints[i])
 		}
 	}
 
-	pathPositions := make([]PathPosition,0)
+
+	alreadyPutPathPositions := make([]PathPosition,0)
+
+	for i := 0 ; i< len(mapPositions); i++{
+		src := mapPositions[i]
+
+		//最も近いポイントを検索
+		dst ,err := src.searchNearPositionWithOutMe(mapPositions)
+		if(err){
+			//近いポイントなかったマン(ありえない)
+		}
+
+		path := PathPosition{src, dst}
+		if (containsPath(alreadyPutPathPositions, path)){
+			//すでに道はひかれている
+			continue
+		}
+
+		//直線道路を引く
+		xy.putRoadStraight(path)
+
+		alreadyPutPathPositions = append(alreadyPutPathPositions, path)
+	}
+
+	/*
 	//何をつなげるか
 	for i := 0 ; i< len(mapPositions); i++{
 		alreadyPos := make([]GameMapPosition, 0)
@@ -155,20 +179,122 @@ enemyStartPoints []GameMapPosition) {
 	for i := 0 ; i< len(pathPositions) ; i++ {
 		xy.putRoad(pathPositions[i])
 	}
+	*/
 }
 
+//道(直線)
 type PathPosition struct {
 	src GameMapPosition
 	dst GameMapPosition
 }
 
+//pathPositionsにtargetを含むならtrue
+func containsPath(pathPositions []PathPosition, target PathPosition) bool {
+	for i := 0 ; i< len(pathPositions); i++{
+		if(pathPositions[i].equalXYTo(target)){
+			return true
+		}
+	}
+	return false
+}
+
+//同じパスか,逆の組み合わせも判定
+func (path PathPosition) equalXYTo(another PathPosition) bool{
+	if(path.src.equalXYTo(another.src) && path.dst.equalXYTo(another.dst)){
+		return true
+	}
+	if(path.src.equalXYTo(another.dst) && path.dst.equalXYTo(another.src)){
+		//逆の組み合わせ
+		return true
+	}
+	return false
+}
+
 //道を引く
-func (xy *xymap) putRoad(pathPosition PathPosition){
-	//どの程度うねるか
+func (xy *xymap) putRoadStraight(path PathPosition){
+	// y = ax + b
+	offsY := float64(path.dst.Y) - float64(path.src.Y)
+	offsX := float64(path.dst.X) - float64(path.src.X)
+	a := offsY / offsX
+	b := float64(path.src.Y) + 0.5 - a * (float64(path.src.X) + 0.5)
 
-	//法線ベクトル
+	minX, maxX, minY, maxY := getMinMaxXY(path)
 
+	for y := minY ; y <= maxY ; y++ {
+		for x := minX; x <= maxX; x++ {
+			if(!isHitToSquare(a, b, float64(x), float64(y))){
+				continue
+			}
+			xy.putPoint(GameMapPosition{x,y,0}, MacroMapTypeLoad)
+		}
+	}
+}
 
+//x,yを起点とする1x1の四角形にy=ax+bの直線が重なるならtrue
+func isHitToSquare(a float64, b float64, x float64, y float64) bool{
+	//下の辺
+	{
+		yy1 := x * a + b
+		yy2 := (x+1.0) * a + b
+		if(yy1 <= y && yy2 > y){
+			return true
+		}
+		if(yy1 > y && yy2 <= y){
+			return true
+		}
+	}
+	//左の辺
+	{
+		xx1 := (y - b) / a
+		xx2 := (y + 1.0 - b) / a
+		if(xx1 <= x && xx2 > x){
+			return true
+		}
+		if(xx1 > x && xx2 <= x){
+			return true
+		}
+	}
+	//上の辺
+	{
+		yy1 := x * a + b
+		yy2 := (x+1.0) * a + b
+		if(yy1 <= (y + 1.0) && yy2 > (y + 1.0)){
+			return true
+		}
+		if(yy1 > (y + 1.0) && yy2 <= (y + 1.0)){
+			return true
+		}
+	}
+	//右の辺
+	{
+		xx1 := (y - b) / a
+		xx2 := (y + 1.0 - b) / a
+		if(xx1 <= (x + 1.0) && xx2 > (x + 1.0)){
+			return true
+		}
+		if(xx1 > (x + 1.0) && xx2 <= (x + 1.0)){
+			return true
+		}
+	}
+	return false
+}
+
+func getMinMaxXY(path PathPosition) (minX int, maxX int, minY int, maxY int){
+	if(path.src.X < path.dst.X){
+		minX = path.src.X
+		maxX = path.dst.X
+	}else{
+		minX = path.dst.X
+		maxX = path.src.X
+	}
+	if(path.src.Y < path.dst.Y){
+		minY = path.src.Y
+		maxY = path.dst.Y
+	}else{
+		minY = path.dst.Y
+		maxY = path.src.Y
+	}
+	return minX, maxX, minY, maxY
 }
 
 func (xy *xymap) printMapForDebug() {

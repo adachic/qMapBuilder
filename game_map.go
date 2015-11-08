@@ -61,6 +61,42 @@ const (
 	MacroMapTypeEnemyPoint
 )
 
+
+//自分を除く最も近いポイントを返す
+//errがtrueなら見つからなかった
+func (pos GameMapPosition) searchNearPositionWithOutMe(positions []GameMapPosition) (nearPos GameMapPosition, err bool) {
+	err = true;
+	minDistance := 10000
+	for i := 0; i < len(positions); i++ {
+		tgtPos := positions[i]
+		if(pos.equalXYTo(tgtPos)){
+			continue
+		}
+		distance := pos.distance(tgtPos)
+		if(distance < minDistance){
+			minDistance = distance
+			nearPos = tgtPos
+		}
+	}
+	return nearPos, err
+}
+
+func (pos GameMapPosition) equalXYTo(another GameMapPosition) bool{
+	return (pos.X == another.X) && (pos.Y == another.Y)
+}
+
+func (pos GameMapPosition) distance(another GameMapPosition) int {
+	absx := pos.X - another.X
+	absy := pos.Y - another.Y
+	if(absx < 0){
+		absx *= -1
+	}
+	if(absy < 0){
+		absy *= -1
+	}
+	return absx + absy
+}
+
 //座標
 type GameMapPosition struct {
 	X int
@@ -81,12 +117,12 @@ func (d Geographical) Prob() int {
 	return int(d)
 }
 
-func NewGameMap(condition GameMapCondition) *GameMap{
+func NewGameMap(condition GameMapCondition) *GameMap {
 	game_map := &GameMap{}
 	return game_map.init(condition)
 }
 
-func (game_map *GameMap) init(condition GameMapCondition) *GameMap{
+func (game_map *GameMap) init(condition GameMapCondition) *GameMap {
 	//難易度を初期化
 	game_map.initMapDifficult()
 	fmt.Printf("difficult: %+v\n", game_map.difficult)
@@ -210,7 +246,7 @@ func (game_map *GameMap) initAllyStartPoint() {
 		seed = Range{0, 20}
 		break
 	}
-	fmt.Print("seed",seed.Min," ",seed.Max)
+	fmt.Print("seed", seed.Min, " ", seed.Max)
 	distanceFrom := lottery.GetRandomInt(seed.Min, seed.Max)
 	game_map.AllyStartPoint = CreateRandomPositionInMap(
 		game_map.Size,
@@ -219,7 +255,7 @@ func (game_map *GameMap) initAllyStartPoint() {
 }
 
 //敵出現座標の一覧を返す
-func (game_map *GameMap) initEnemyStartPoints(){
+func (game_map *GameMap) initEnemyStartPoints() {
 	type rangeFromAlly struct {
 		Min int
 		Max int
@@ -260,10 +296,10 @@ func (game_map *GameMap) initEnemyStartPoints(){
 
 //マップ
 type GameMap struct {
-	JungleGym [][][]GameParts
-	Size      GameMapSize
-	difficult Difficult
-	Geographical Geographical
-	AllyStartPoint GameMapPosition
+	JungleGym        [][][]GameParts
+	Size             GameMapSize
+	difficult        Difficult
+	Geographical     Geographical
+	AllyStartPoint   GameMapPosition
 	EnemyStartPoints []GameMapPosition
 }
