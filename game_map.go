@@ -361,20 +361,29 @@ func (game_map *GameMap) copyFromXY(xy *xymap) {
 
 //パーツとのひも付け
 func (game_map *GameMap) bindToGameParts(gamePartsDict map[string]GameParts) {
+	//ラウンド世界観を決定
+	//カテゴリの決定
 
 
 
-	/*
+
+
+	//雪マップか
+
+
+	//主幹パーツの決定
+	//道・ラフ・その他
+
+	//パーツ選定
 	for x := 0; x < game_map.Size.MaxX; x++ {
 		for y := 0; y < game_map.Size.MaxY; y++ {
 			for z := 0; z < game_map.Size.MaxZ; z++ {
-//				macro := game_map.MacroMapTypes[z][y][x]
-//				high := xymap.high[y][x];
+				macro := game_map.MacroMapTypes[z][y][x]
+				high := game_map.High[y][x];
 				for z := 0; z <= high; z++ {
-//					game_map.JungleGym[z][y][x] = GetGameParts(macro, game_map.Geographical, z);
+					game_map.JungleGym[z][y][x] = GetGameParts(macro, game_map.Geographical, z);
 				}
 			}
 		}
 	}
-	*/
 }

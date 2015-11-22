@@ -17,8 +17,8 @@ func main() {
 
 	//pre;
 	//- [] パーツ情報のロード
-	//gamePartsDict = CreateGamePartsDict("./AppParts.json")
-	gamePartsDict = CreateGamePartsDict("./IntegratedPartsAll.parts.json")
+//	gamePartsDict = CreateGamePartsDict("./AppParts.json")
+	gamePartsDict = CreateGamePartsDict("./assets/IntegratedPartsAll.json")
 
 	//loop;
 	//- [] アルゴリズムで自動生成

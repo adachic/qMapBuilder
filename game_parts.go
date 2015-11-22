@@ -63,7 +63,7 @@ type GameParts struct {
 
 	Snow          int
 	MacroTypes    []MacroMapType
-	Pavement      int
+	PavementType      int
 
 	WaterType     WaterType `json:"waterType"`
 	Category      Category
