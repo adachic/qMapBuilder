@@ -493,16 +493,16 @@ func imageTile(tile Tile) *image.RGBA {
 	return outputImg
 }
 
-//srcImgのsrcRectをdstImgのdstRectにコピ-
+//srcImgのsrcRectを dstImgのdstRectにコピ-
 func clipAfromB(srcImg *image.RGBA, srcRect image.Rectangle, dstImg *image.RGBA, dstRect image.Rectangle) {
 	for x := 0; x < srcRect.Max.X; x++ {
 		for y := 0; y < srcRect.Max.Y; y++ {
 			srcRGBA := srcImg.At(x, y)
 			_, _, _, a := srcRGBA.RGBA()
-			if(a == 0xffff){
-//				continue
+			if(a == 0){
+				//0は透明
+				continue
 			}
-			fmt.Print("alpha",a)
 			dstImg.Set(dstRect.Min.X + x, dstRect.Min.Y + y, srcRGBA)
 		}
 	}
