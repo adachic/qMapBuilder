@@ -17,7 +17,8 @@ func main() {
 
 	//pre;
 	//- [] パーツ情報のロード
-	gamePartsDict = CreateGamePartsDict("./AppParts.json")
+	//gamePartsDict = CreateGamePartsDict("./AppParts.json")
+	gamePartsDict = CreateGamePartsDict("./IntegratedPartsAll.parts.json")
 
 	//loop;
 	//- [] アルゴリズムで自動生成
@@ -50,6 +51,9 @@ func flow(condition GameMapCondition) {
 	//バリデーション
 
 	//描画
+
+	//create png
+
 
 	//json_export
 

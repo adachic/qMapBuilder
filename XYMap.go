@@ -8,16 +8,24 @@ import (
 
 type xymap struct {
 	mapSize GameMapSize
-	matrix [][]MacroMapType //種別
-	high [][]int //高さ
+	matrix  [][]MacroMapType //種別
+	high    [][]int          //高さ
 }
 
-func NewXYMap(mapSize GameMapSize) *xymap{
+func (xy *xymap) getMatrix(x int, y int) MacroMapType {
+	return xy.matrix[y][x]
+}
+
+func (xy *xymap) getHigh(x int, y int) int {
+	return xy.high[y][x]
+}
+
+func NewXYMap(mapSize GameMapSize) *xymap {
 	xy := &xymap{}
 	return xy.init(mapSize)
 }
 
-func (xy *xymap) init(mapSize GameMapSize) *xymap{
+func (xy *xymap) init(mapSize GameMapSize) *xymap {
 	xy.mapSize = mapSize
 	xy.matrix = make([][]MacroMapType, mapSize.MaxY)
 	for y := 0; y < mapSize.MaxY; y++ {
@@ -119,7 +127,7 @@ centerPoint GameMapPosition) {
 }
 
 //pointをmacroMapTypeにする
-func (xy *xymap) putPoint(point GameMapPosition, macroMapType MacroMapType){
+func (xy *xymap) putPoint(point GameMapPosition, macroMapType MacroMapType) {
 	xy.matrix[point.Y][point.X] = macroMapType
 }
 
@@ -133,20 +141,20 @@ enemyStartPoints []GameMapPosition) {
 	mapPositions := make([]GameMapPosition, 0)
 	{
 		mapPositions = append(mapPositions, allyStartPoint)
-		for i := 0 ; i < len(enemyStartPoints) ; i++ {
+		for i := 0; i < len(enemyStartPoints); i++ {
 			mapPositions = append(mapPositions, enemyStartPoints[i])
 		}
 	}
 
 
-	alreadyPutPathPositions := make([]PathPosition,0)
+	alreadyPutPathPositions := make([]PathPosition, 0)
 
-	for i := 0 ; i< len(mapPositions); i++{
+	for i := 0; i < len(mapPositions); i++ {
 		src := mapPositions[i]
 
 		//最も近いポイントを検索
-		dst ,err := src.searchNearPositionWithOutMe(mapPositions, alreadyPutPathPositions)
-		if(err){
+		dst, err := src.searchNearPositionWithOutMe(mapPositions, alreadyPutPathPositions)
+		if (err) {
 			//近いポイントなかったマン(ありえない)
 			continue
 		}
@@ -173,8 +181,8 @@ type PathPosition struct {
 
 //pathPositionsにtargetを含むならtrue
 func containsPath(pathPositions []PathPosition, target PathPosition) bool {
-	for i := 0 ; i< len(pathPositions); i++{
-		if(pathPositions[i].equalXYTo(target)){
+	for i := 0; i < len(pathPositions); i++ {
+		if (pathPositions[i].equalXYTo(target)) {
 			return true
 		}
 	}
@@ -182,11 +190,11 @@ func containsPath(pathPositions []PathPosition, target PathPosition) bool {
 }
 
 //同じパスか,逆の組み合わせも判定
-func (path PathPosition) equalXYTo(another PathPosition) bool{
-	if(path.src.equalXYTo(another.src) && path.dst.equalXYTo(another.dst)){
+func (path PathPosition) equalXYTo(another PathPosition) bool {
+	if (path.src.equalXYTo(another.src) && path.dst.equalXYTo(another.dst)) {
 		return true
 	}
-	if(path.src.equalXYTo(another.dst) && path.dst.equalXYTo(another.src)){
+	if (path.src.equalXYTo(another.dst) && path.dst.equalXYTo(another.src)) {
 		//逆の組み合わせ
 		return true
 	}
@@ -194,14 +202,14 @@ func (path PathPosition) equalXYTo(another PathPosition) bool{
 }
 
 //道を引く
-func (xy *xymap) putRoadStraight(path PathPosition){
+func (xy *xymap) putRoadStraight(path PathPosition) {
 	// y = ax + b
 	offsY := float64(path.dst.Y) - float64(path.src.Y)
 	offsX := float64(path.dst.X) - float64(path.src.X)
-	if(path.dst.X == path.src.X){
+	if (path.dst.X == path.src.X) {
 		offsX = 0.01
 	}
-	if(path.dst.Y == path.src.Y){
+	if (path.dst.Y == path.src.Y) {
 		offsY = 0.01
 	}
 	a := offsY / offsX
@@ -209,26 +217,26 @@ func (xy *xymap) putRoadStraight(path PathPosition){
 
 	minX, maxX, minY, maxY := getMinMaxXY(path)
 
-	for y := minY ; y <= maxY ; y++ {
+	for y := minY; y <= maxY; y++ {
 		for x := minX; x <= maxX; x++ {
-			if(!isHitToSquare(a, b, float64(x), float64(y))){
+			if (!isHitToSquare(a, b, float64(x), float64(y))) {
 				continue
 			}
-			xy.putPoint(GameMapPosition{x,y,0}, MacroMapTypeLoad)
+			xy.putPoint(GameMapPosition{x, y, 0}, MacroMapTypeLoad)
 		}
 	}
 }
 
 //x,yを起点とする1x1の四角形にy=ax+bの直線が重なるならtrue
-func isHitToSquare(a float64, b float64, x float64, y float64) bool{
+func isHitToSquare(a float64, b float64, x float64, y float64) bool {
 	//下の辺
 	{
 		yy1 := x * a + b
-		yy2 := (x+1.0) * a + b
-		if(yy1 <= y && yy2 > y){
+		yy2 := (x + 1.0) * a + b
+		if (yy1 <= y && yy2 > y) {
 			return true
 		}
-		if(yy1 > y && yy2 <= y){
+		if (yy1 > y && yy2 <= y) {
 			return true
 		}
 	}
@@ -236,21 +244,21 @@ func isHitToSquare(a float64, b float64, x float64, y float64) bool{
 	{
 		xx1 := (y - b) / a
 		xx2 := (y + 1.0 - b) / a
-		if(xx1 <= x && xx2 > x){
+		if (xx1 <= x && xx2 > x) {
 			return true
 		}
-		if(xx1 > x && xx2 <= x){
+		if (xx1 > x && xx2 <= x) {
 			return true
 		}
 	}
 	//上の辺
 	{
 		yy1 := x * a + b
-		yy2 := (x+1.0) * a + b
-		if(yy1 <= (y + 1.0) && yy2 > (y + 1.0)){
+		yy2 := (x + 1.0) * a + b
+		if (yy1 <= (y + 1.0) && yy2 > (y + 1.0)) {
 			return true
 		}
-		if(yy1 > (y + 1.0) && yy2 <= (y + 1.0)){
+		if (yy1 > (y + 1.0) && yy2 <= (y + 1.0)) {
 			return true
 		}
 	}
@@ -258,28 +266,28 @@ func isHitToSquare(a float64, b float64, x float64, y float64) bool{
 	{
 		xx1 := (y - b) / a
 		xx2 := (y + 1.0 - b) / a
-		if(xx1 <= (x + 1.0) && xx2 > (x + 1.0)){
+		if (xx1 <= (x + 1.0) && xx2 > (x + 1.0)) {
 			return true
 		}
-		if(xx1 > (x + 1.0) && xx2 <= (x + 1.0)){
+		if (xx1 > (x + 1.0) && xx2 <= (x + 1.0)) {
 			return true
 		}
 	}
 	return false
 }
 
-func getMinMaxXY(path PathPosition) (minX int, maxX int, minY int, maxY int){
-	if(path.src.X < path.dst.X){
+func getMinMaxXY(path PathPosition) (minX int, maxX int, minY int, maxY int) {
+	if (path.src.X < path.dst.X) {
 		minX = path.src.X
 		maxX = path.dst.X
-	}else{
+	}else {
 		minX = path.dst.X
 		maxX = path.src.X
 	}
-	if(path.src.Y < path.dst.Y){
+	if (path.src.Y < path.dst.Y) {
 		minY = path.src.Y
 		maxY = path.dst.Y
-	}else{
+	}else {
 		minY = path.dst.Y
 		maxY = path.src.Y
 	}

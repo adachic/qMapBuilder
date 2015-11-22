@@ -57,6 +57,7 @@ const (
 	MacroMapTypeRough
 	MacroMapTypeWall
 	MacroMapTypeCantEnter //進入不可地形
+	MacroMapTypeOther //他
 	MacroMapTypeAllyPoint
 	MacroMapTypeEnemyPoint
 )
@@ -69,14 +70,14 @@ func (pos GameMapPosition) searchNearPositionWithOutMe(positions []GameMapPositi
 	minDistance := 10000
 	for i := 0; i < len(positions); i++ {
 		tgtPos := positions[i]
-		if(pos.equalXYTo(tgtPos)){
+		if (pos.equalXYTo(tgtPos)) {
 			continue
 		}
-		if(containsPath(alreadys, PathPosition{pos, tgtPos})){
+		if (containsPath(alreadys, PathPosition{pos, tgtPos})) {
 			continue
 		}
 		distance := pos.distance(tgtPos)
-		if(distance < minDistance){
+		if (distance < minDistance) {
 			minDistance = distance
 			nearPos = tgtPos
 			err = false
@@ -85,17 +86,17 @@ func (pos GameMapPosition) searchNearPositionWithOutMe(positions []GameMapPositi
 	return nearPos, err
 }
 
-func (pos GameMapPosition) equalXYTo(another GameMapPosition) bool{
+func (pos GameMapPosition) equalXYTo(another GameMapPosition) bool {
 	return (pos.X == another.X) && (pos.Y == another.Y)
 }
 
 func (pos GameMapPosition) distance(another GameMapPosition) int {
 	absx := pos.X - another.X
 	absy := pos.Y - another.Y
-	if(absx < 0){
+	if (absx < 0) {
 		absx *= -1
 	}
-	if(absy < 0){
+	if (absy < 0) {
 		absy *= -1
 	}
 	return absx + absy
@@ -174,13 +175,14 @@ func (game_map *GameMap) init(condition GameMapCondition) *GameMap {
 		//水、毒沼配置
 
 		//alloc/init
-		game_map.allocToJungleGym(xymap)
+		game_map.allocToJungleGym()
+
+		//xymap情報をコピー
+		game_map.copyFromXY(xymap)
 
 		//dump
 		xymap.printMapForDebug()
 	}
-
-
 	return game_map
 }
 
@@ -311,6 +313,8 @@ func (game_map *GameMap) initEnemyStartPoints() {
 //マップ
 type GameMap struct {
 	JungleGym        [][][]GameParts
+	MacroMapTypes    [][][]MacroMapType
+	High 			 [][]int
 	Size             GameMapSize
 	difficult        Difficult
 	Geographical     Geographical
@@ -318,7 +322,7 @@ type GameMap struct {
 	EnemyStartPoints []GameMapPosition
 }
 
-func (game_map *GameMap) allocToJungleGym(xy *xymap) {
+func (game_map *GameMap) allocToJungleGym() {
 	game_map.JungleGym = make([][][]GameParts, game_map.Size.MaxZ)
 	for z := 0; z < game_map.Size.MaxZ; z++ {
 		game_map.JungleGym[z] = make([][]GameParts, game_map.Size.MaxY)
@@ -327,14 +331,50 @@ func (game_map *GameMap) allocToJungleGym(xy *xymap) {
 		}
 	}
 
-	//ここでxyをjungleGymへ移行作業
+	game_map.MacroMapTypes = make([][][]MacroMapType, game_map.Size.MaxZ)
+	for z := 0; z < game_map.Size.MaxZ; z++ {
+		game_map.MacroMapTypes[z] = make([][]MacroMapType, game_map.Size.MaxY)
+		for y := 0; y < game_map.Size.MaxY; y++ {
+			game_map.MacroMapTypes[z][y] = make([]MacroMapType, game_map.Size.MaxX)
+		}
+	}
 
-	//パーツとのひも付けもこのクラスでやってよいのでは
+	game_map.High = make([][]int,game_map.Size.MaxY)
+	for y := 0; y < game_map.Size.MaxY; y++ {
+		game_map.High[y] = make([]int, game_map.Size.MaxX)
+	}
+}
 
+//ここでxyをjungleGymへ移行
+func (game_map *GameMap) copyFromXY(xy *xymap) {
+	for x := 0; x < xy.mapSize.MaxX; x++ {
+		for y := 0; y < xy.mapSize.MaxY; y++ {
+			macro := xy.getMatrix(x, y);
+			high := xy.getHigh(x, y);
+			game_map.High[y][x] = high;
+			for z := 0; z <= high; z++ {
+				game_map.MacroMapTypes[z][y][x] = macro;
+			}
+		}
+	}
 }
 
 //パーツとのひも付け
 func (game_map *GameMap) bindToGameParts(gamePartsDict map[string]GameParts) {
-	//雑に地形ごとに全部わりあててみる
 
+
+
+	/*
+	for x := 0; x < game_map.Size.MaxX; x++ {
+		for y := 0; y < game_map.Size.MaxY; y++ {
+			for z := 0; z < game_map.Size.MaxZ; z++ {
+//				macro := game_map.MacroMapTypes[z][y][x]
+//				high := xymap.high[y][x];
+				for z := 0; z <= high; z++ {
+//					game_map.JungleGym[z][y][x] = GetGameParts(macro, game_map.Geographical, z);
+				}
+			}
+		}
+	}
+	*/
 }
