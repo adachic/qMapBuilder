@@ -70,6 +70,8 @@ type GameParts struct {
 	WaterType     WaterType `json:"waterType"`
 	Category      Category
 	StructureType StructureType
+
+	IsEmpty 	  bool
 }
 
 //jsonから辞書作成
@@ -87,6 +89,10 @@ func CreateGamePartsDict(filePath string) map[string]GameParts {
 	fmt.Printf("%+v\n", partsDict)
 	fmt.Printf("%+v\n", len(partsDict))
 	fmt.Printf("%+v\n", partsDict["15"])
+
+	for _, value := range partsDict{
+		value.IsEmpty = false;
+	}
 
 	return partsDict
 }
@@ -204,19 +210,19 @@ func GetGamePartsFoundation(idsWall []int, idsRough []int, idsRoad []int, gamePa
 	wallIdsCount := len(idsWall)
 	if(wallIdsCount > 0){
 		id := lottery.GetRandomInt(0, wallIdsCount)
-		return gamePartsDict[strconv.Itoa(id)]
+		return gamePartsDict[strconv.Itoa(idsWall[id])]
 	}
 
 	roughIdsCount := len(idsRough)
 	if(roughIdsCount > 0){
 		id := lottery.GetRandomInt(0, roughIdsCount)
-		return gamePartsDict[strconv.Itoa(id)]
+		return gamePartsDict[strconv.Itoa(idsRough[id])]
 	}
 
 	roadIdsCount := len(idsRoad)
 	if(roadIdsCount > 0){
 		id := lottery.GetRandomInt(0,roadIdsCount)
-		return gamePartsDict[strconv.Itoa(id)]
+		return gamePartsDict[strconv.Itoa(idsRoad[id])]
 	}
 	return GameParts{}
 }

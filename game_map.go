@@ -7,6 +7,11 @@ import (
 	"time"
 
 	"github.com/adachic/lottery"
+	"image"
+	"image/png"
+	"os"
+	"github.com/satori/go.uuid"
+	"image/color"
 )
 
 //マップの大きさ
@@ -383,6 +388,16 @@ type GameMap struct {
 	PavementLv       int
 }
 
+func (game_map *GameMap)fillJungleGymToEmpty() {
+	for z := 0; z < game_map.Size.MaxZ; z++ {
+		for y := 0; y < game_map.Size.MaxY; y++ {
+			for x := 0; x < game_map.Size.MaxX; x++ {
+				game_map.JungleGym[z][y][x] = GameParts{IsEmpty:true};
+			}
+		}
+	}
+}
+
 func (game_map *GameMap) allocToJungleGym() {
 	game_map.JungleGym = make([][][]GameParts, game_map.Size.MaxZ)
 	for z := 0; z < game_map.Size.MaxZ; z++ {
@@ -391,6 +406,7 @@ func (game_map *GameMap) allocToJungleGym() {
 			game_map.JungleGym[z][y] = make([]GameParts, game_map.Size.MaxX)
 		}
 	}
+	game_map.fillJungleGymToEmpty();
 
 	game_map.MacroMapTypes = make([][][]MacroMapType, game_map.Size.MaxZ)
 	for z := 0; z < game_map.Size.MaxZ; z++ {
@@ -432,19 +448,161 @@ func (game_map *GameMap) bindToGameParts(gamePartsDict map[string]GameParts) {
 	//2.パーツ割当
 	for x := 0; x < game_map.Size.MaxX; x++ {
 		for y := 0; y < game_map.Size.MaxY; y++ {
-			for z := 0; z < game_map.Size.MaxZ; z++ {
+			high := game_map.High[y][x];
+			for z := 0; z <= high; z++ {
 				macro := game_map.MacroMapTypes[z][y][x]
-				high := game_map.High[y][x];
-				for z := 0; z <= high; z++ {
-					//1.土
-					if (z < high) {
-						game_map.JungleGym[z][y][x] = GetGamePartsFoundation(idsWall, idsRough, idsRoad, gamePartsDict);
-						continue;
-					}
-					//2.表層(道,ラフ,壁)
-					game_map.JungleGym[z][y][x] = GetGamePartsSurface(idsWall, idsRough, idsRoad, gamePartsDict, macro, z);
+				//1.土
+				if (z < high) {
+					parts := GetGamePartsFoundation(idsWall, idsRough, idsRoad, gamePartsDict);
+					fmt.Println("cube0:%+v", parts)
+					game_map.JungleGym[z][y][x] = parts;
+					continue;
 				}
+				//2.表層(道,ラフ,壁)
+				parts := GetGamePartsSurface(idsWall, idsRough, idsRoad, gamePartsDict, macro, z);
+				fmt.Println("cube1:%+v", parts)
+				game_map.JungleGym[z][y][x] = parts;
 			}
 		}
 	}
 }
+
+//tileのimageを得る
+func imageTile(tile Tile) *image.RGBA {
+	file, err := os.Open("./assets/" + tile.FilePath)
+	defer file.Close()
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+	img, err := png.Decode(file)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+	//	tileRect := image.Rect(tile.X, tile.Y, tile.Width, tile.Height)
+
+	outputRect := image.Rect(0, 0, tile.Width, tile.Height)
+	outputImg := image.NewRGBA(outputRect)
+	for x := 0; x < outputRect.Max.X; x++ {
+		for y := 0; y < outputRect.Max.Y; y++ {
+			outputImg.Set(x, y, img.At(tile.X + x, tile.Y + y))
+		}
+	}
+
+	return outputImg
+}
+
+//srcImgのsrcRectをdstImgのdstRectにコピ-
+func clipAfromB(srcImg *image.RGBA, srcRect image.Rectangle, dstImg *image.RGBA, dstRect image.Rectangle) {
+	for x := 0; x < srcRect.Max.X; x++ {
+		for y := 0; y < srcRect.Max.Y; y++ {
+			srcRGBA := srcImg.At(x, y)
+			_, _, _, a := srcRGBA.RGBA()
+			if(a == 0xffff){
+//				continue
+			}
+			fmt.Print("alpha",a)
+			dstImg.Set(dstRect.Min.X + x, dstRect.Min.Y + y, srcRGBA)
+		}
+	}
+}
+
+//x,y,zの起点座標の計算
+func targetDrawPoint(x int, y int, z int) image.Point {
+	xx := (x - 1) * 16 + (y - 1) * 16
+	yy := 8 * x * -1 + 8 * y + 16 * z
+	return image.Point{xx, yy}
+}
+
+/*
+	CGFloat xOrigin = self.aspectX / 2.0f * matrix.x +
+	self.aspectX / 2.0f * matrix.y;
+	CGFloat yOrigin =
+	self.aspectY / 2.0f * matrix.x * -1.0f +
+	self.aspectY / 2.0f * matrix.y +
+	self.aspectT * matrix.z;
+	CGFloat yAid = [self aidOfZ0Position];
+	return CGPointMake(xOrigin, yOrigin + yAid);
+*/
+
+func (game_map *GameMap) getMaxZ() int {
+	maxHigh := 0
+	for y := 0; y < game_map.Size.MaxY; y++ {
+		for x := 0; x < game_map.Size.MaxX; x++ {
+			if(maxHigh < game_map.High[y][x]){
+				maxHigh = game_map.High[y][x]
+			}
+		}
+	}
+	game_map.Size.MaxZ = maxHigh
+	return maxHigh
+}
+
+//png生成
+func (game_map *GameMap) createPng(gamePartsDict map[string]GameParts) {
+	game_map.getMaxZ();
+
+	outputWidth := 16 + game_map.Size.MaxX * 16 + (game_map.Size.MaxY - 1) * 16
+	outputHeight := 16 + game_map.Size.MaxX * 8 + game_map.Size.MaxY * 8 + game_map.Size.MaxZ* 16
+	outputRect := image.Rect(0, 0, outputWidth, outputHeight)
+
+	fmt.Printf("aho1:%+v\n", outputRect)
+
+	//出力するイメージ
+	outputImg := image.NewRGBA(outputRect)
+	fmt.Printf("aho11:\n")
+
+	//塗りつぶす
+	for x := 0; x < outputRect.Max.X; x++ {
+		for y := 0; y < outputRect.Max.Y; y++ {
+			//			fmt.Printf("aho111:%d,%d/,%d,%d\n",x,y,outputRect.Max.X,outputRect.Max.Y)
+			outputImg.Set(x, y, color.Black)
+		}
+	}
+
+	fmt.Printf("aho2:\n")
+	for z := 0; z < game_map.Size.MaxZ; z++ {
+		for y := (game_map.Size.MaxY - 1); y >= 0; y-- {
+			for x := 0; x < game_map.Size.MaxX; x++ {
+				cube := game_map.JungleGym[z][y][x]
+				if (cube.IsEmpty) {
+					fmt.Printf("gomi:%d,%d,%d\n", z, y, x)
+					continue
+				}
+				fmt.Printf("unko: %d,%d,%d\n", z, y, x)
+				fmt.Printf("cube: %+v\n", cube)
+				//切り出す
+				tile := cube.Tiles[0]
+				tileImage := imageTile(tile)
+				tileRect := image.Rect(0, 0, tile.Width, tile.Height)
+
+				//バッファへ貼り付け
+				dstPoint := targetDrawPoint(x, y, z)
+				dstRect := image.Rect(dstPoint.X, dstPoint.Y, outputWidth, outputHeight)
+				clipAfromB(tileImage, tileRect, outputImg, dstRect)
+			}
+		}
+	}
+	fmt.Printf("aho3:")
+
+	//ファイル出力
+	fileName := uuid.NewV4().String()
+	file, err := os.Create(fileName + ".png")
+	defer file.Close()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	err = png.Encode(file, outputImg)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	fmt.Printf("aho4:")
+}
+
+
+
+
+
