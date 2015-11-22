@@ -121,7 +121,7 @@ centerPoint GameMapPosition) {
 			if y2 < 0 {
 				y2 = 0
 			}
-			xy.matrix[y2][x2] = MacroMapTypeLoad
+			xy.matrix[y2][x2] = MacroMapTypeRoad
 		}
 	}
 }
@@ -222,7 +222,7 @@ func (xy *xymap) putRoadStraight(path PathPosition) {
 			if (!isHitToSquare(a, b, float64(x), float64(y))) {
 				continue
 			}
-			xy.putPoint(GameMapPosition{x, y, 0}, MacroMapTypeLoad)
+			xy.putPoint(GameMapPosition{x, y, 0}, MacroMapTypeRoad)
 		}
 	}
 }
@@ -300,7 +300,7 @@ func (xy *xymap) printMapForDebug() {
 			switch xy.matrix[y][x] {
 			case MacroMapTypeCantEnter:
 				fmt.Print("#")
-			case MacroMapTypeLoad:
+			case MacroMapTypeRoad:
 				fmt.Print(".")
 			case MacroMapTypeAllyPoint:
 				fmt.Print("A")
@@ -360,7 +360,7 @@ func (xy *xymap) makeGradientRoad(rowestHigh int) {
 	for y := 0; y < xy.mapSize.MaxY; y++ {
 		for x := 0; x < xy.mapSize.MaxX; x++ {
 			switch xy.matrix[y][x] {
-			case MacroMapTypeLoad:
+			case MacroMapTypeRoad:
 				fallthrough
 			case MacroMapTypeAllyPoint:
 				fallthrough

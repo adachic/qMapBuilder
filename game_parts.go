@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"github.com/adachic/lottery"
+	"strconv"
 )
 
 type Category int
@@ -63,7 +65,7 @@ type GameParts struct {
 
 	Snow          int
 	MacroTypes    []MacroMapType
-	PavementType      int
+	PavementType  int
 
 	WaterType     WaterType `json:"waterType"`
 	Category      Category
@@ -87,6 +89,136 @@ func CreateGamePartsDict(filePath string) map[string]GameParts {
 	fmt.Printf("%+v\n", partsDict["15"])
 
 	return partsDict
+}
+
+//gamePartsがmacroMapTypeを含むならtrue
+func IsIncludedMacroType(gameParts GameParts,tgt MacroMapType) bool{
+	for _, value := range gameParts.MacroTypes{
+//		fmt.Printf("unko2 %+v,\n", value)
+		if(value == tgt){
+			return true
+		}
+	}
+	return false
+}
+
+//主幹となる道の種類を決定し、id群を返す
+func GetIdsRoad(game_map *GameMap, gamePartsDict map[string]GameParts) []int {
+	var idsRoad []int
+
+	//カテゴリ集合体
+	for id, parts:= range gamePartsDict{
+		if (parts.Category != game_map.Category){
+//			fmt.Printf("unko%+v, %+v\n", parts.Category ,game_map.Category)
+			continue
+		}
+		if (!IsIncludedMacroType(parts, MacroMapTypeRoad)){
+//			fmt.Printf("unko2%+v, %+v\n", parts.,game_map.Category)
+			continue
+		}
+//		fmt.Printf("unko3\n")
+		i , _ := strconv.Atoi(id)
+		idsRoad = append(idsRoad, i)
+	}
+
+	fmt.Printf("idsRoad:%+v\n", idsRoad)
+	return idsRoad
+}
+
+//主幹となるラフの種類を決定し、id群を返す
+func GetIdsRough(game_map *GameMap, gamePartsDict map[string]GameParts) []int {
+	var idsRough []int
+
+	//カテゴリ集合体
+	for id, parts:= range gamePartsDict{
+		if (parts.Category != game_map.Category){
+			continue
+		}
+		if (!IsIncludedMacroType(parts, MacroMapTypeRough)){
+			continue
+		}
+		i , _ := strconv.Atoi(id)
+		idsRough = append(idsRough, i)
+	}
+	fmt.Printf("idsRough:%+v\n", idsRough)
+	return idsRough
+}
+
+//主幹となる壁の種類を決定し、id群を返す
+func GetIdsWall(game_map *GameMap, gamePartsDict map[string]GameParts) []int {
+	var idsWall []int
+
+	//カテゴリ集合体
+	for id, parts:= range gamePartsDict{
+		if (parts.Category != game_map.Category){
+			continue
+		}
+		if (!IsIncludedMacroType(parts, MacroMapTypeWall)){
+			continue
+		}
+		i , _ := strconv.Atoi(id)
+		idsWall= append(idsWall, i)
+	}
+	fmt.Printf("idsWall:%+v\n", idsWall)
+	return idsWall
+}
+
+//表層(道,ラフ,壁)
+func GetGamePartsSurface(idsWall []int, idsRough []int, idsRoad []int,
+gamePartsDict map[string]GameParts,macro MacroMapType, z int) GameParts{
+	switch(macro){
+	case MacroMapTypeRoad:
+		return GetGamePartsRoad(idsWall, idsRough, idsRoad, gamePartsDict, macro, z);
+	case MacroMapTypeRough:
+		return GetGamePartsRough(idsWall, idsRough, idsRoad, gamePartsDict, macro, z);
+	case MacroMapTypeWall:
+		return GetGamePartsWall(idsWall, idsRough, idsRoad, gamePartsDict, macro, z);
+	}
+	return GetGamePartsRough(idsWall, idsRough, idsRoad, gamePartsDict, macro, z);
+}
+
+//道を返す
+func GetGamePartsRoad(idsWall []int, idsRough []int, idsRoad []int,
+gamePartsDict map[string]GameParts,macro MacroMapType, z int) GameParts{
+	id := idsRoad[0]
+	return gamePartsDict[strconv.Itoa(id)]
+}
+
+//ラフを返す
+func GetGamePartsRough(idsWall []int, idsRough []int, idsRoad []int,
+gamePartsDict map[string]GameParts,macro MacroMapType, z int) GameParts{
+	id := idsRough[0]
+	return gamePartsDict[strconv.Itoa(id)]
+}
+
+//壁を返す
+func GetGamePartsWall(idsWall []int, idsRough []int, idsRoad []int,
+gamePartsDict map[string]GameParts,macro MacroMapType, z int) GameParts{
+	id := idsWall[0]
+	return gamePartsDict[strconv.Itoa(id)]
+}
+
+
+//土を返す
+func GetGamePartsFoundation(idsWall []int, idsRough []int, idsRoad []int, gamePartsDict map[string]GameParts) GameParts{
+	wallIdsCount := len(idsWall)
+	if(wallIdsCount > 0){
+		id := lottery.GetRandomInt(0, wallIdsCount)
+		return gamePartsDict[strconv.Itoa(id)]
+	}
+
+	roughIdsCount := len(idsRough)
+	if(roughIdsCount > 0){
+		id := lottery.GetRandomInt(0, roughIdsCount)
+		return gamePartsDict[strconv.Itoa(id)]
+	}
+
+	roadIdsCount := len(idsRoad)
+	if(roadIdsCount > 0){
+		id := lottery.GetRandomInt(0,roadIdsCount)
+		return gamePartsDict[strconv.Itoa(id)]
+	}
+	return GameParts{}
 }
 
 /*

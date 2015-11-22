@@ -53,7 +53,7 @@ const (
 //マップメタ(ここから詳細なパーツを決定)
 type MacroMapType int
 const (
-	MacroMapTypeLoad = iota
+	MacroMapTypeRoad = 1 + iota
 	MacroMapTypeRough
 	MacroMapTypeWall
 	MacroMapTypeCantEnter //進入不可地形
@@ -114,6 +114,10 @@ func (d Difficult) Prob() int {
 	return int(d)
 }
 
+func (d Category) Prob() int {
+	return int(d)
+}
+
 func (d RectForm) Prob() int {
 	return int(d)
 }
@@ -130,7 +134,14 @@ func NewGameMap(condition GameMapCondition) *GameMap {
 func (game_map *GameMap) init(condition GameMapCondition) *GameMap {
 	//難易度を初期化
 	game_map.initMapDifficult()
-	fmt.Printf("difficult: %+v\n", game_map.difficult)
+	fmt.Printf("difficult: %+v\n", game_map.Difficult)
+
+	//カテゴリを初期化
+	game_map.initMapCategory()
+	fmt.Printf("category: %+v\n", game_map.Category)
+
+	//道の舗装度を初期化
+	game_map.initMapPavement()
 
 	//マップのサイズを初期化
 	game_map.initMapSize()
@@ -154,10 +165,10 @@ func (game_map *GameMap) init(condition GameMapCondition) *GameMap {
 		xymap := NewXYMap(game_map.Size)
 
 		//広場配置
-		xymap.putPlazas(game_map.difficult, game_map.AllyStartPoint, game_map.EnemyStartPoints)
+		xymap.putPlazas(game_map.Difficult, game_map.AllyStartPoint, game_map.EnemyStartPoints)
 
 		//道配置
-		xymap.putRoads(game_map.difficult, game_map.AllyStartPoint, game_map.EnemyStartPoints)
+		xymap.putRoads(game_map.Difficult, game_map.AllyStartPoint, game_map.EnemyStartPoints)
 
 		//壁配置
 
@@ -199,7 +210,51 @@ func (game_map *GameMap) initMapDifficult() {
 	result := lot.Lots(
 		difficults...,
 	)
-	game_map.difficult = difficults[result].(Difficult)
+	game_map.Difficult = difficults[result].(Difficult)
+}
+
+//雪原かどうかの抽選結果を返す
+func (game_map *GameMap) initMapSnow() {
+	dice := lottery.GetRandomInt(0, 100);
+	game_map.IsSnow = dice < 2
+}
+
+//舗装度の抽選結果を返す
+func (game_map *GameMap) initMapPavement() {
+	dice := lottery.GetRandomInt(0, 100);
+	switch{
+	case dice < 20:
+		game_map.PavementLv = 1;
+	case dice < 40:
+		game_map.PavementLv = 2;
+	case dice < 60:
+		game_map.PavementLv = 3;
+	case dice < 80:
+		game_map.PavementLv = 4;
+	case dice < 100:
+		game_map.PavementLv = 5;
+	}
+}
+
+//マップカテゴリの抽選結果を返す
+func (game_map *GameMap) initMapCategory() {
+	lot := lottery.New(rand.New(rand.NewSource(time.Now().UnixNano())))
+	categories := []lottery.Interface{
+		CategoryStep,
+		CategoryMountain,
+		CategoryCave,
+		CategoryShrine,
+		CategoryTown,
+		CategoryCastle,
+	}
+	result := lot.Lots(
+		categories...,
+	)
+	game_map.Category = categories[result].(Category)
+	switch(game_map.Category){
+	case CategoryTown:
+		game_map.Category = CategoryStep
+	}
 }
 
 
@@ -210,7 +265,7 @@ func (game_map *GameMap) initMapSize() {
 	//x/yアスペクト比
 	aspect := CreateAspectOfRectFrom(rectForm)
 	//面積
-	area := CreateArea(game_map.difficult)
+	area := CreateArea(game_map.Difficult)
 
 	fmt.Printf("form: %+v\n", rectForm)
 	fmt.Printf("area: %+v\n", area)
@@ -248,7 +303,7 @@ func (game_map *GameMap) initMapGeographical() {
 func (game_map *GameMap) initAllyStartPoint() {
 	var seed Range
 	//難度が高いと中央寄りになる
-	switch game_map.difficult{
+	switch game_map.Difficult{
 	case easy:
 		seed = Range{70, 100}
 		break
@@ -281,7 +336,7 @@ func (game_map *GameMap) initEnemyStartPoints() {
 	//敵出撃座標の数
 	var sattyPointNum int
 
-	switch game_map.difficult{
+	switch game_map.Difficult{
 	case easy:
 		sattyPointNum = lottery.GetRandomInt(1, 3)
 		rangeFrom = rangeFromAlly{50, 100}
@@ -314,12 +369,18 @@ func (game_map *GameMap) initEnemyStartPoints() {
 type GameMap struct {
 	JungleGym        [][][]GameParts
 	MacroMapTypes    [][][]MacroMapType
-	High 			 [][]int
+	High             [][]int
+
 	Size             GameMapSize
-	difficult        Difficult
-	Geographical     Geographical
+
 	AllyStartPoint   GameMapPosition
 	EnemyStartPoints []GameMapPosition
+
+	Difficult        Difficult
+	Geographical     Geographical
+	Category         Category
+	IsSnow           bool
+	PavementLv       int
 }
 
 func (game_map *GameMap) allocToJungleGym() {
@@ -339,7 +400,7 @@ func (game_map *GameMap) allocToJungleGym() {
 		}
 	}
 
-	game_map.High = make([][]int,game_map.Size.MaxY)
+	game_map.High = make([][]int, game_map.Size.MaxY)
 	for y := 0; y < game_map.Size.MaxY; y++ {
 		game_map.High[y] = make([]int, game_map.Size.MaxX)
 	}
@@ -361,27 +422,27 @@ func (game_map *GameMap) copyFromXY(xy *xymap) {
 
 //パーツとのひも付け
 func (game_map *GameMap) bindToGameParts(gamePartsDict map[string]GameParts) {
-	//ラウンド世界観を決定
-	//カテゴリの決定
+	/*選定パーツのゾーニング*/
+	//1.主幹パーツの決定:道・ラフ・その他
 
+	idsRoad := GetIdsRoad(game_map, gamePartsDict)
+	idsRough := GetIdsRough(game_map, gamePartsDict)
+	idsWall := GetIdsWall(game_map, gamePartsDict)
 
-
-
-
-	//雪マップか
-
-
-	//主幹パーツの決定
-	//道・ラフ・その他
-
-	//パーツ選定
+	//2.パーツ割当
 	for x := 0; x < game_map.Size.MaxX; x++ {
 		for y := 0; y < game_map.Size.MaxY; y++ {
 			for z := 0; z < game_map.Size.MaxZ; z++ {
 				macro := game_map.MacroMapTypes[z][y][x]
 				high := game_map.High[y][x];
 				for z := 0; z <= high; z++ {
-					game_map.JungleGym[z][y][x] = GetGameParts(macro, game_map.Geographical, z);
+					//1.土
+					if (z < high) {
+						game_map.JungleGym[z][y][x] = GetGamePartsFoundation(idsWall, idsRough, idsRoad, gamePartsDict);
+						continue;
+					}
+					//2.表層(道,ラフ,壁)
+					game_map.JungleGym[z][y][x] = GetGamePartsSurface(idsWall, idsRough, idsRoad, gamePartsDict, macro, z);
 				}
 			}
 		}
