@@ -621,7 +621,7 @@ func (game_map *GameMap) createPng(gamePartsDict map[string]GameParts) {
 
 	//ファイル出力
 	fileName := uuid.NewV4().String()
-	file, err := os.Create(fileName + ".png")
+	file, err := os.Create("./output/"+fileName + ".png")
 	defer file.Close()
 	if err != nil {
 		fmt.Println(err)
