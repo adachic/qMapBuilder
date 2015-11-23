@@ -454,13 +454,13 @@ func (game_map *GameMap) bindToGameParts(gamePartsDict map[string]GameParts) {
 				//1.土
 				if (z < high) {
 					parts := GetGamePartsFoundation(idsWall, idsRough, idsRoad, gamePartsDict);
-					fmt.Println("cube0:%+v", parts)
+					fmt.Printf("found  : %2d,%2d,%2d id:%s macro[%v]\n", z, y, x, parts.Id, macro)
 					game_map.JungleGym[z][y][x] = parts;
 					continue;
 				}
 				//2.表層(道,ラフ,壁)
 				parts := GetGamePartsSurface(idsWall, idsRough, idsRoad, gamePartsDict, macro, z);
-				fmt.Println("cube1:%+v", parts)
+				fmt.Printf("surface: %2d,%2d,%2d id:%s macro[%v]\n", z, y, x, parts.Id, macro)
 				game_map.JungleGym[z][y][x] = parts;
 			}
 		}
@@ -468,7 +468,7 @@ func (game_map *GameMap) bindToGameParts(gamePartsDict map[string]GameParts) {
 }
 
 //tileのimageを得る
-func imageTile(tile Tile) *image.RGBA {
+func imageTile32(tile Tile) *image.RGBA {
 	file, err := os.Open("./assets/" + tile.FilePath)
 	defer file.Close()
 	if err != nil {
@@ -482,14 +482,38 @@ func imageTile(tile Tile) *image.RGBA {
 	}
 	//	tileRect := image.Rect(tile.X, tile.Y, tile.Width, tile.Height)
 
-	outputRect := image.Rect(0, 0, tile.Width, tile.Height)
+		outputRect := image.Rect(0, 0, tile.Width, tile.Height)
+		outputImg := image.NewRGBA(outputRect)
+		for x := 0; x < outputRect.Max.X; x++ {
+			for y := 0; y < outputRect.Max.Y; y++ {
+				outputImg.Set(x, y, img.At(tile.X + x, tile.Y + y))
+			}
+		}
+	return outputImg
+}
+
+//tileのimageを得る
+func imageTile64(tile Tile) *image.RGBA {
+	file, err := os.Open("./assets/" + tile.FilePath)
+	defer file.Close()
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+	img, err := png.Decode(file)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+	//	tileRect := image.Rect(tile.X, tile.Y, tile.Width, tile.Height)
+
+	outputRect := image.Rect(0, 0, tile.Width/2, tile.Height/2)
 	outputImg := image.NewRGBA(outputRect)
 	for x := 0; x < outputRect.Max.X; x++ {
 		for y := 0; y < outputRect.Max.Y; y++ {
-			outputImg.Set(x, y, img.At(tile.X + x, tile.Y + y))
+			outputImg.Set(x, y, img.At(tile.X + x*2, tile.Y + y*2))
 		}
 	}
-
 	return outputImg
 }
 
@@ -556,7 +580,7 @@ func (game_map *GameMap) createPng(gamePartsDict map[string]GameParts) {
 	//塗りつぶす
 	for x := 0; x < outputRect.Max.X; x++ {
 		for y := 0; y < outputRect.Max.Y; y++ {
-			//			fmt.Printf("aho111:%d,%d/,%d,%d\n",x,y,outputRect.Max.X,outputRect.Max.Y)
+			//fmt.Printf("aho111:%d,%d/,%d,%d\n",x,y,outputRect.Max.X,outputRect.Max.Y)
 			outputImg.Set(x, y, color.Black)
 		}
 	}
@@ -567,18 +591,25 @@ func (game_map *GameMap) createPng(gamePartsDict map[string]GameParts) {
 			for x := 0; x < game_map.Size.MaxX; x++ {
 				cube := game_map.JungleGym[z][y][x]
 				if (cube.IsEmpty) {
-					fmt.Printf("gomi:%d,%d,%d\n", z, y, x)
+					//fmt.Printf("gomi:%d,%d,%d\n", z, y, x)
 					continue
 				}
-				fmt.Printf("unko: %d,%d,%d\n", z, y, x)
-				fmt.Printf("cube: %+v\n", cube)
+//				fmt.Printf("unko: %d,%d,%d\n", z, y, x)
+//				fmt.Printf("cube: %+v\n", cube)
+
 				//切り出す
 				tile := cube.Tiles[0]
-				tileImage := imageTile(tile)
+				var tileImage *image.RGBA
+				if(cube.RezoType == RezoTypeRect64){
+					tileImage = imageTile64(tile)
+				}else{
+					tileImage = imageTile32(tile)
+				}
 				tileRect := image.Rect(0, 0, tile.Width, tile.Height)
 
 				//バッファへ貼り付け
-				dstPoint := targetDrawPoint(x, y, z)
+				dstPoint := targetDrawPoint(x,game_map.Size.MaxY- y, game_map.Size.MaxZ- z)
+				//dstPoint := targetDrawPoint(x, y, z)
 				dstRect := image.Rect(dstPoint.X, dstPoint.Y, outputWidth, outputHeight)
 				clipAfromB(tileImage, tileRect, outputImg, dstRect)
 			}

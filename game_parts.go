@@ -209,8 +209,8 @@ gamePartsDict map[string]GameParts,macro MacroMapType, z int) GameParts{
 func GetGamePartsFoundation(idsWall []int, idsRough []int, idsRoad []int, gamePartsDict map[string]GameParts) GameParts{
 	wallIdsCount := len(idsWall)
 	if(wallIdsCount > 0){
-		id := lottery.GetRandomInt(0, wallIdsCount)
-		return gamePartsDict[strconv.Itoa(idsWall[id])]
+//		id := lottery.GetRandomInt(0, wallIdsCount)
+		return gamePartsDict[strconv.Itoa(idsWall[0])]
 	}
 
 	roughIdsCount := len(idsRough)

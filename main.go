@@ -43,13 +43,17 @@ func main() {
 //基本フロー
 func flow(condition GameMapCondition) {
 	//マップ生成
+	fmt.Println("====createMap====")
 	game_map := NewGameMap(condition)
+
+	fmt.Println("====bind====")
 
 	//実際のパーツとのひも付け
 	game_map.bindToGameParts(gamePartsDict)
 
 	//バリデーション
 
+	fmt.Println("====drawMap====")
 	//png生成
 	game_map.createPng(gamePartsDict)
 

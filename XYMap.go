@@ -295,7 +295,8 @@ func getMinMaxXY(path PathPosition) (minX int, maxX int, minY int, maxY int) {
 }
 
 func (xy *xymap) printMapForDebug() {
-	for y := 0; y < xy.mapSize.MaxY; y++ {
+	for y := (xy.mapSize.MaxY - 1); y >= 0; y-- {
+		fmt.Printf("%02d ",y)
 		for x := 0; x < xy.mapSize.MaxX; x++ {
 			switch xy.matrix[y][x] {
 			case MacroMapTypeCantEnter:
