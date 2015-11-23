@@ -533,9 +533,12 @@ func clipAfromB(srcImg *image.RGBA, srcRect image.Rectangle, dstImg *image.RGBA,
 }
 
 //x,y,zの起点座標の計算
-func targetDrawPoint(x int, y int, z int) image.Point {
-	xx := (x - 1) * 16 + (y - 1) * 16
-	yy := 8 * x * -1 + 8 * y + 16 * z
+func (game_map *GameMap) targetDrawPoint(x int, y int, z int) image.Point {
+	xx := (x) * 16 + (y) * 16
+	yy := (game_map.Size.MaxZ - z) * 16 +
+	(game_map.Size.MaxY - y) * 8 +
+	x * 8 ;
+//	yy := (8 * x * -1) + (8 * y) + (16 * z)
 	return image.Point{xx, yy}
 }
 
@@ -550,7 +553,7 @@ func targetDrawPoint(x int, y int, z int) image.Point {
 	return CGPointMake(xOrigin, yOrigin + yAid);
 */
 
-func (game_map *GameMap) getMaxZ() int {
+func (game_map *GameMap) updateMaxZ() {
 	maxHigh := 0
 	for y := 0; y < game_map.Size.MaxY; y++ {
 		for x := 0; x < game_map.Size.MaxX; x++ {
@@ -560,12 +563,11 @@ func (game_map *GameMap) getMaxZ() int {
 		}
 	}
 	game_map.Size.MaxZ = maxHigh
-	return maxHigh
 }
 
 //png生成
 func (game_map *GameMap) createPng(gamePartsDict map[string]GameParts) {
-	game_map.getMaxZ();
+	game_map.updateMaxZ();
 
 	outputWidth := 16 + game_map.Size.MaxX * 16 + (game_map.Size.MaxY - 1) * 16
 	outputHeight := 16 + game_map.Size.MaxX * 8 + game_map.Size.MaxY * 8 + game_map.Size.MaxZ* 16
@@ -608,7 +610,7 @@ func (game_map *GameMap) createPng(gamePartsDict map[string]GameParts) {
 				tileRect := image.Rect(0, 0, tile.Width, tile.Height)
 
 				//バッファへ貼り付け
-				dstPoint := targetDrawPoint(x,game_map.Size.MaxY- y, game_map.Size.MaxZ- z)
+				dstPoint := game_map.targetDrawPoint(x,y,z)
 				//dstPoint := targetDrawPoint(x, y, z)
 				dstRect := image.Rect(dstPoint.X, dstPoint.Y, outputWidth, outputHeight)
 				clipAfromB(tileImage, tileRect, outputImg, dstRect)
