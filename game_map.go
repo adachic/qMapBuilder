@@ -590,7 +590,7 @@ func (game_map *GameMap) createPng(gamePartsDict map[string]GameParts) {
 	}
 
 	fmt.Printf("aho2:\n")
-	for z := 0; z < game_map.Size.MaxZ; z++ {
+	for z := 0; z <= game_map.Size.MaxZ; z++ {
 		for y := (game_map.Size.MaxY - 1); y >= 0; y-- {
 			for x := 0; x < game_map.Size.MaxX; x++ {
 				cube := game_map.JungleGym[z][y][x]

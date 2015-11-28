@@ -3,6 +3,7 @@ package main
 import (
 //	"flag"
 	"fmt"
+	"sync"
 )
 
 var gamePartsDict map[string]GameParts
@@ -64,12 +65,18 @@ func flow(condition GameMapCondition) {
 //雑に100回まわしてみる
 func bulc(condition GameMapCondition) {
 	//x := 100
-	x := 1
+	x := 100
+	wt := sync.WaitGroup{}
 	for x > 0 {
 		x--
-		flow(condition)
-		fmt.Printf("\n")
+		wt.Add(1)
+		go func (){
+			flow(condition)
+			fmt.Printf("\n")
+			wt.Done()
+		}()
 	}
+	wt.Wait()
 }
 
 
