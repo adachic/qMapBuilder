@@ -158,17 +158,25 @@ func GetIdsRoad(game_map *GameMap, gamePartsDict map[string]GameParts) []int {
 
 //主幹となるラフの種類を決定し、id群を返す
 func GetIdsRough(game_map *GameMap, gamePartsDict map[string]GameParts) []int {
+	var partsRoughs Roads
 	var idsRough []int
 
 	//カテゴリ集合体
-	for id, parts := range gamePartsDict {
+	for _, parts := range gamePartsDict {
 		if (parts.Category != game_map.Category) {
 			continue
 		}
 		if (!IsIncludedMacroType(parts, MacroMapTypeRough)) {
 			continue
 		}
-		i, _ := strconv.Atoi(id)
+		partsRoughs = append(partsRoughs, parts)
+	}
+
+	//舗装度でソートする
+	sort.Sort(partsRoughs)
+
+	for _, parts := range partsRoughs {
+		i, _ := strconv.Atoi(parts.Id)
 		idsRough = append(idsRough, i)
 	}
 	fmt.Printf("idsRough:%+v\n", idsRough)
@@ -177,17 +185,24 @@ func GetIdsRough(game_map *GameMap, gamePartsDict map[string]GameParts) []int {
 
 //主幹となる壁の種類を決定し、id群を返す
 func GetIdsWall(game_map *GameMap, gamePartsDict map[string]GameParts) []int {
+	var partsWalls Roads
 	var idsWall []int
 
 	//カテゴリ集合体
-	for id, parts := range gamePartsDict {
+	for _, parts := range gamePartsDict {
 		if (parts.Category != game_map.Category) {
 			continue
 		}
 		if (!IsIncludedMacroType(parts, MacroMapTypeWall)) {
 			continue
 		}
-		i, _ := strconv.Atoi(id)
+		partsWalls = append(partsWalls, parts)
+	}
+	//舗装度でソートする
+	sort.Sort(partsWalls)
+
+	for _, parts := range partsWalls {
+		i, _ := strconv.Atoi(parts.Id)
 		idsWall = append(idsWall, i)
 	}
 	fmt.Printf("idsWall:%+v\n", idsWall)
@@ -201,36 +216,35 @@ gamePartsDict map[string]GameParts, macro MacroMapType, x int, y int, z int) Gam
 	case MacroMapTypeRoad:
 		return GetGamePartsRoad(idsWall, idsRough, idsRoad, gamePartsDict, macro, x, y, z);
 	case MacroMapTypeRough:
-		return GetGamePartsRough(idsWall, idsRough, idsRoad, gamePartsDict, macro, z);
+		return GetGamePartsRough(idsWall, idsRough, idsRoad, gamePartsDict, macro, x, y,z);
 	case MacroMapTypeWall:
-		return GetGamePartsWall(idsWall, idsRough, idsRoad, gamePartsDict, macro, z);
+		return GetGamePartsWall(idsWall, idsRough, idsRoad, gamePartsDict, macro,x, y, z);
 	}
-	return GetGamePartsRough(idsWall, idsRough, idsRoad, gamePartsDict, macro, z);
+	return GetGamePartsRough(idsWall, idsRough, idsRoad, gamePartsDict, macro,x, y, z);
 }
 
 //道を返す
 func GetGamePartsRoad(idsWall []int, idsRough []int, idsRoad []int,
 gamePartsDict map[string]GameParts, macro MacroMapType, x int, y int, z int, ) GameParts {
-
-	idx := GetIdxWithEval2(x,y,idsRoad)
+	idx := GetIdxWithEval3(x,y,z,idsRoad)
 	id := idsRoad[idx]
 	return gamePartsDict[strconv.Itoa(id)]
 }
 
 //ラフを返す
 func GetGamePartsRough(idsWall []int, idsRough []int, idsRoad []int,
-gamePartsDict map[string]GameParts, macro MacroMapType, z int) GameParts {
+gamePartsDict map[string]GameParts, macro MacroMapType,x int, y int, z int) GameParts {
 	opensimplex.NewWithSeed(0);
-
-
-	id := idsRough[0]
+	idx := GetIdxWithEval3(x,y,z,idsRough)
+	id := idsRough[idx]
 	return gamePartsDict[strconv.Itoa(id)]
 }
 
 //壁を返す
 func GetGamePartsWall(idsWall []int, idsRough []int, idsRoad []int,
-gamePartsDict map[string]GameParts, macro MacroMapType, z int) GameParts {
-	id := idsWall[0]
+gamePartsDict map[string]GameParts, macro MacroMapType, x int, y int, z int) GameParts {
+	idx := GetIdxWithEval3(x,y,z,idsWall)
+	id := idsWall[idx]
 	return gamePartsDict[strconv.Itoa(id)]
 }
 
@@ -261,86 +275,9 @@ func GetGamePartsFoundation(idsWall []int, idsRough []int, idsRoad []int, gamePa
 	return GameParts{}
 }
 
-/*
-//具体的なパーツを返す
-func GetGameParts(macroType MacroMapType, geographical Geographical, z int) GameParts {
-	shouldHarf := ((z % 2) == 1)
-	var parts GameParts
-	switch macroType {
-	case MacroMapTypeLoad:
-		parts = getRoad(geographical, shouldHarf);
-	case MacroMapTypeRough:
-		parts = getRough(geographical);
-	case MacroMapTypeWall:
-		parts = getWall(geographical);
-	case MacroMapTypeCantEnter: //進入不可地形
-		parts = getCantEnter(geographical);
-	case MacroMapTypeAllyPoint:
-	case MacroMapTypeEnemyPoint:
-	}
-	return parts
-}
-
-//道
-func getRoad(geographical Geographical, shouldHarf bool) GameParts {
-	var ids []int
-	if (!shouldHarf) {
-		switch {
-		case GeographicalStep:
-			idsHosou := []int{847, 462, 845, 31, 166, 465}
-			idsMichi := []int{848}
-			idsBoro := []int{462, 463, 464}
-		//847舗装//848木
-		case GeographicalMountain:
-		case GeographicalCave:
-		case GeographicalFort:
-		case GeographicalShrine:
-		case GeographicalTown:
-		case GeographicalCastle:
-		}
-		return;
-	}
-	switch {
-	case GeographicalStep:
-		ids = []int{848, 847, 462, 845}
-	//847舗装//848木
-	case GeographicalMountain:
-	case GeographicalCave:
-	case GeographicalFort:
-	case GeographicalShrine:
-	case GeographicalTown:
-	case GeographicalCastle:
-	}
-}
-
-//ラフ
-func getRough(geographical Geographical) GameParts {
-	var ids []int
-	switch {
-	case GeographicalStep:
-		ids = []int{995, 994}
-	case GeographicalMountain:
-	case GeographicalCave:
-	case GeographicalFort:
-	case GeographicalShrine:
-	case GeographicalTown:
-	case GeographicalCastle:
-	}
-}
-
-//壁
-func getWall(geographical Geographical) GameParts {
-}
-
-//進入不可
-func getCantEnter(geographical Geographical) GameParts {
-}
-
-*/
-
 //パーリンノイズに従って[]からidxを得る
 func GetIdxWithEval2(x int, y int, ids []int) int{
-	coefficient := 0.1 //パーリンノイズのサンプリング粒度小さいほどなだらか
+	coefficient := 0.01 //パーリンノイズのサンプリング粒度小さいほどなだらか
 
 	val := opensimplex.NewWithSeed(0).Eval2(float64(x) * coefficient, float64(y) * coefficient)
 	num := len(ids)
@@ -351,3 +288,15 @@ func GetIdxWithEval2(x int, y int, ids []int) int{
 	return idx
 }
 
+//パーリンノイズに従って[]からidxを得る
+func GetIdxWithEval3(x int, y int, z int, ids []int) int{
+	coefficient := 0.01 //パーリンノイズのサンプリング粒度小さいほどなだらか
+
+	val := opensimplex.NewWithSeed(0).Eval3(float64(x) * coefficient, float64(y) * coefficient, float64(z) * coefficient)
+	num := len(ids)
+	floatId := float64(num) * (val + 1.0) / 2.0
+	idx := int(floatId)
+	fmt.Printf("x:%d,y:%d,z:%d,val:%f,num:%f,idx:%d\n", x, y, z, val, num, idx);
+
+	return idx
+}

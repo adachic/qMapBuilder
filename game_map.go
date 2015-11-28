@@ -429,7 +429,7 @@ func (game_map *GameMap) copyFromXY(xy *xymap) {
 			macro := xy.getMatrix(x, y);
 			high := xy.getHigh(x, y);
 			game_map.High[y][x] = high;
-			for z := 0; z <= high; z++ {
+			for z := 0; z < high; z++ {
 				game_map.MacroMapTypes[z][y][x] = macro;
 			}
 		}
@@ -449,10 +449,10 @@ func (game_map *GameMap) bindToGameParts(gamePartsDict map[string]GameParts) {
 	for x := 0; x < game_map.Size.MaxX; x++ {
 		for y := 0; y < game_map.Size.MaxY; y++ {
 			high := game_map.High[y][x];
-			for z := 0; z <= high; z++ {
+			for z := 0; z < high; z++ {
 				macro := game_map.MacroMapTypes[z][y][x]
 				//1.土
-				if (z < high) {
+				if (z < high -っっっっっっっっっっっっｋ1) {
 					parts := GetGamePartsFoundation(idsWall, idsRough, idsRoad, gamePartsDict);
 					fmt.Printf("found  : %2d,%2d,%2d id:%s \n", z, y, x, parts.Id)
 					game_map.JungleGym[z][y][x] = parts;
