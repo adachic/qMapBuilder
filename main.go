@@ -18,7 +18,6 @@ func main() {
 
 	//pre;
 	//- [] パーツ情報のロード
-//	gamePartsDict = CreateGamePartsDict("./AppParts.json")
 	gamePartsDict = CreateGamePartsDict("./assets/IntegratedPartsAll.json")
 
 	//loop;
@@ -59,13 +58,12 @@ func flow(condition GameMapCondition) {
 	game_map.createPng(gamePartsDict)
 
 	//json_export
-
 }
 
 //雑に100回まわしてみる
 func bulc(condition GameMapCondition) {
 	//x := 100
-	x := 100
+	x := 1
 	wt := sync.WaitGroup{}
 	for x > 0 {
 		x--
@@ -78,6 +76,3 @@ func bulc(condition GameMapCondition) {
 	}
 	wt.Wait()
 }
-
-
-

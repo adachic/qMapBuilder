@@ -459,7 +459,7 @@ func (game_map *GameMap) bindToGameParts(gamePartsDict map[string]GameParts) {
 					continue;
 				}
 				//2.表層(道,ラフ,壁)
-				parts := GetGamePartsSurface(idsWall, idsRough, idsRoad, gamePartsDict, macro, z);
+				parts := GetGamePartsSurface(idsWall, idsRough, idsRoad, gamePartsDict, macro, x, y, z);
 				fmt.Printf("surface: %2d,%2d,%2d id:%s macro[%v]\n", z, y, x, parts.Id, macro)
 				game_map.JungleGym[z][y][x] = parts;
 			}
@@ -636,8 +636,3 @@ func (game_map *GameMap) createPng(gamePartsDict map[string]GameParts) {
 	}
 	fmt.Printf("aho4:")
 }
-
-
-
-
-
