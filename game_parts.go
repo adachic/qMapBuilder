@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"github.com/adachic/lottery"
 	"strconv"
 	"github.com/ojrac/opensimplex-go"
 	"sort"
@@ -248,29 +247,31 @@ gamePartsDict map[string]GameParts, macro MacroMapType, x int, y int, z int) Gam
 	return gamePartsDict[strconv.Itoa(id)]
 }
 
-
-
 //土を返す
-func GetGamePartsFoundation(idsWall []int, idsRough []int, idsRoad []int, gamePartsDict map[string]GameParts) GameParts {
+func GetGamePartsFoundation(idsWall []int, idsRough []int, idsRoad []int, gamePartsDict map[string]GameParts,
+ x int, y int, z int) GameParts {
 	wallIdsCount := len(idsWall)
 	if (wallIdsCount > 0) {
 		//		id := lottery.GetRandomInt(0, wallIdsCount)
-		fmt.Printf("wall id: %2d", idsWall[0])
-		return gamePartsDict[strconv.Itoa(idsWall[0])]
+		idx := GetIdxWithEval3(x,y,z,idsWall)
+		fmt.Printf("wall id: %2d", idsWall[idx])
+		return gamePartsDict[strconv.Itoa(idsWall[idx])]
 	}
 
 	roughIdsCount := len(idsRough)
 	if (roughIdsCount > 0) {
-		id := lottery.GetRandomInt(0, roughIdsCount)
-		fmt.Printf("rough id: %2d", idsRough[0])
-		return gamePartsDict[strconv.Itoa(idsRough[id])]
+		idx := GetIdxWithEval3(x,y,z,idsRough)
+//		id := lottery.GetRandomInt(0, roughIdsCount)
+		fmt.Printf("rough id: %2d", idsRough[idx])
+		return gamePartsDict[strconv.Itoa(idsRough[idx])]
 	}
 
 	roadIdsCount := len(idsRoad)
 	if (roadIdsCount > 0) {
-		id := lottery.GetRandomInt(0, roadIdsCount)
-		fmt.Printf("road id: %2d", idsRoad[0])
-		return gamePartsDict[strconv.Itoa(idsRoad[id])]
+		idx := GetIdxWithEval3(x,y,z,idsRoad)
+//		id := lottery.GetRandomInt(0, roadIdsCount)
+		fmt.Printf("road id: %2d", idsRoad[idx])
+		return gamePartsDict[strconv.Itoa(idsRoad[idx])]
 	}
 	return GameParts{}
 }

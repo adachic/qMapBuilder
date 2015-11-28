@@ -452,8 +452,8 @@ func (game_map *GameMap) bindToGameParts(gamePartsDict map[string]GameParts) {
 			for z := 0; z < high; z++ {
 				macro := game_map.MacroMapTypes[z][y][x]
 				//1.土
-				if (z < high -っっっっっっっっっっっっｋ1) {
-					parts := GetGamePartsFoundation(idsWall, idsRough, idsRoad, gamePartsDict);
+				if (z < high - 1) {
+					parts := GetGamePartsFoundation(idsWall, idsRough, idsRoad, gamePartsDict, x, y, z);
 					fmt.Printf("found  : %2d,%2d,%2d id:%s \n", z, y, x, parts.Id)
 					game_map.JungleGym[z][y][x] = parts;
 					continue;
@@ -481,7 +481,7 @@ func imageTile32(tile Tile) *image.RGBA {
 		return nil
 	}
 	//	tileRect := image.Rect(tile.X, tile.Y, tile.Width, tile.Height)
-	yy :=  img.Bounds().Max.Y - tile.Y  - tile.Height;
+	yy := img.Bounds().Max.Y - tile.Y - tile.Height;
 
 	outputRect := image.Rect(0, 0, tile.Width, tile.Height)
 	outputImg := image.NewRGBA(outputRect)
@@ -507,7 +507,7 @@ func imageTile64(tile Tile) *image.RGBA {
 		return nil
 	}
 	//	tileRect := image.Rect(tile.X, tile.Y, tile.Width, tile.Height)
-	yy :=  img.Bounds().Max.Y - tile.Y  - tile.Height;
+	yy := img.Bounds().Max.Y - tile.Y - tile.Height;
 
 	outputRect := image.Rect(0, 0, tile.Width / 2, tile.Height / 2)
 	outputImg := image.NewRGBA(outputRect)
