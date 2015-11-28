@@ -215,26 +215,26 @@ gamePartsDict map[string]GameParts, macro MacroMapType, x int, y int, z int) Gam
 	case MacroMapTypeRoad:
 		return GetGamePartsRoad(idsWall, idsRough, idsRoad, gamePartsDict, macro, x, y, z);
 	case MacroMapTypeRough:
-		return GetGamePartsRough(idsWall, idsRough, idsRoad, gamePartsDict, macro, x, y,z);
+		return GetGamePartsRough(idsWall, idsRough, idsRoad, gamePartsDict, macro, x, y, z);
 	case MacroMapTypeWall:
-		return GetGamePartsWall(idsWall, idsRough, idsRoad, gamePartsDict, macro,x, y, z);
+		return GetGamePartsWall(idsWall, idsRough, idsRoad, gamePartsDict, macro, x, y, z);
 	}
-	return GetGamePartsRough(idsWall, idsRough, idsRoad, gamePartsDict, macro,x, y, z);
+	return GetGamePartsRough(idsWall, idsRough, idsRoad, gamePartsDict, macro, x, y, z);
 }
 
 //道を返す
 func GetGamePartsRoad(idsWall []int, idsRough []int, idsRoad []int,
 gamePartsDict map[string]GameParts, macro MacroMapType, x int, y int, z int, ) GameParts {
-	idx := GetIdxWithEval3(x,y,z,idsRoad)
+	idx := GetIdxWithEval3(x, y, z, idsRoad)
 	id := idsRoad[idx]
 	return gamePartsDict[strconv.Itoa(id)]
 }
 
 //ラフを返す
 func GetGamePartsRough(idsWall []int, idsRough []int, idsRoad []int,
-gamePartsDict map[string]GameParts, macro MacroMapType,x int, y int, z int) GameParts {
+gamePartsDict map[string]GameParts, macro MacroMapType, x int, y int, z int) GameParts {
 	opensimplex.NewWithSeed(0);
-	idx := GetIdxWithEval3(x,y,z,idsRough)
+	idx := GetIdxWithEval3(x, y, z, idsRough)
 	id := idsRough[idx]
 	return gamePartsDict[strconv.Itoa(id)]
 }
@@ -242,34 +242,34 @@ gamePartsDict map[string]GameParts, macro MacroMapType,x int, y int, z int) Game
 //壁を返す
 func GetGamePartsWall(idsWall []int, idsRough []int, idsRoad []int,
 gamePartsDict map[string]GameParts, macro MacroMapType, x int, y int, z int) GameParts {
-	idx := GetIdxWithEval3(x,y,z,idsWall)
+	idx := GetIdxWithEval3(x, y, z, idsWall)
 	id := idsWall[idx]
 	return gamePartsDict[strconv.Itoa(id)]
 }
 
 //土を返す
 func GetGamePartsFoundation(idsWall []int, idsRough []int, idsRoad []int, gamePartsDict map[string]GameParts,
- x int, y int, z int) GameParts {
+x int, y int, z int) GameParts {
 	wallIdsCount := len(idsWall)
 	if (wallIdsCount > 0) {
-		//		id := lottery.GetRandomInt(0, wallIdsCount)
-		idx := GetIdxWithEval3(x,y,z,idsWall)
+		//id := lottery.GetRandomInt(0, wallIdsCount)
+		idx := GetIdxWithEval3(x, y, z, idsWall)
 		fmt.Printf("wall id: %2d", idsWall[idx])
 		return gamePartsDict[strconv.Itoa(idsWall[idx])]
 	}
 
 	roughIdsCount := len(idsRough)
 	if (roughIdsCount > 0) {
-		idx := GetIdxWithEval3(x,y,z,idsRough)
-//		id := lottery.GetRandomInt(0, roughIdsCount)
+		idx := GetIdxWithEval3(x, y, z, idsRough)
+		//id := lottery.GetRandomInt(0, roughIdsCount)
 		fmt.Printf("rough id: %2d", idsRough[idx])
 		return gamePartsDict[strconv.Itoa(idsRough[idx])]
 	}
 
 	roadIdsCount := len(idsRoad)
 	if (roadIdsCount > 0) {
-		idx := GetIdxWithEval3(x,y,z,idsRoad)
-//		id := lottery.GetRandomInt(0, roadIdsCount)
+		idx := GetIdxWithEval3(x, y, z, idsRoad)
+		//id := lottery.GetRandomInt(0, roadIdsCount)
 		fmt.Printf("road id: %2d", idsRoad[idx])
 		return gamePartsDict[strconv.Itoa(idsRoad[idx])]
 	}
@@ -277,7 +277,7 @@ func GetGamePartsFoundation(idsWall []int, idsRough []int, idsRoad []int, gamePa
 }
 
 //パーリンノイズに従って[]からidxを得る
-func GetIdxWithEval2(x int, y int, ids []int) int{
+func GetIdxWithEval2(x int, y int, ids []int) int {
 	coefficient := 0.01 //パーリンノイズのサンプリング粒度小さいほどなだらか
 
 	val := opensimplex.NewWithSeed(0).Eval2(float64(x) * coefficient, float64(y) * coefficient)
@@ -290,7 +290,7 @@ func GetIdxWithEval2(x int, y int, ids []int) int{
 }
 
 //パーリンノイズに従って[]からidxを得る
-func GetIdxWithEval3(x int, y int, z int, ids []int) int{
+func GetIdxWithEval3(x int, y int, z int, ids []int) int {
 	coefficient := 0.01 //パーリンノイズのサンプリング粒度小さいほどなだらか
 
 	val := opensimplex.NewWithSeed(0).Eval3(float64(x) * coefficient, float64(y) * coefficient, float64(z) * coefficient)

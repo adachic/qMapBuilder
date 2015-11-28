@@ -4,6 +4,7 @@ import (
 	"math"
 	"github.com/adachic/lottery"
 	"fmt"
+	"github.com/ojrac/opensimplex-go"
 )
 
 type xymap struct {
@@ -296,13 +297,17 @@ func getMinMaxXY(path PathPosition) (minX int, maxX int, minY int, maxY int) {
 
 func (xy *xymap) printMapForDebug() {
 	for y := (xy.mapSize.MaxY - 1); y >= 0; y-- {
-		fmt.Printf("%02d ",y)
+		fmt.Printf("%02d ", y)
 		for x := 0; x < xy.mapSize.MaxX; x++ {
 			switch xy.matrix[y][x] {
 			case MacroMapTypeCantEnter:
 				fmt.Print("#")
 			case MacroMapTypeRoad:
 				fmt.Print(".")
+			case MacroMapTypeRough:
+				fmt.Print(";")
+			case MacroMapTypeWall:
+				fmt.Print("=")
 			case MacroMapTypeAllyPoint:
 				fmt.Print("A")
 			case MacroMapTypeEnemyPoint:
@@ -321,27 +326,29 @@ func (xy *xymap) printMapForDebug() {
 //ルール: x,yが大きいほど高い
 func (xy *xymap) makeGradient(geo Geographical) {
 	rowestHigh := 0
+	//険しさ(勾配の範囲)
+//	steepness := 0
 	//まず地形でだいたいの高さ
 	switch geo {
-	case GeographicalStep    :
+	case GeographicalStep:
 		rowestHigh = 3
 		break
 	case GeographicalMountain:
 		rowestHigh = 7
 		break
-	case GeographicalCave    :
+	case GeographicalCave:
 		rowestHigh = 7
 		break
-	case GeographicalFort    :
+	case GeographicalFort:
 		rowestHigh = 4
 		break
-	case GeographicalShrine  :
+	case GeographicalShrine:
 		rowestHigh = 4
 		break
-	case GeographicalTown    :
+	case GeographicalTown:
 		rowestHigh = 4
 		break
-	case GeographicalCastle  :
+	case GeographicalCastle:
 		rowestHigh = 4
 		break
 	}
@@ -350,9 +357,12 @@ func (xy *xymap) makeGradient(geo Geographical) {
 	xy.makeGradientRoad(rowestHigh)
 
 	//だんだんと段差になっていく
-
+	//パーリンノイズかける
+	xy.makeGradientRough(rowestHigh)
 
 	//それ以外のところは2個あがったり下がったりさせる
+	//ラフ
+
 }
 
 //手前から道の高さを調整していく（歩けるように高さ調整していく）
@@ -367,6 +377,32 @@ func (xy *xymap) makeGradientRoad(rowestHigh int) {
 				fallthrough
 			case MacroMapTypeEnemyPoint:
 				xy.high[y][x] = currentHeight
+			}
+		}
+	}
+}
+
+func (xy *xymap) makeGradientRough(rowestHigh int) {
+	critHeight := rowestHigh
+	coefficient := 0.1
+	for y := 0; y < xy.mapSize.MaxY; y++ {
+		for x := 0; x < xy.mapSize.MaxX; x++ {
+			val := opensimplex.NewWithSeed(0).Eval2(float64(x)*coefficient, float64(y)*coefficient)
+			floatHeight := float64(critHeight) * (val + 1.0) /2.0
+			height := int(floatHeight)
+			if(height < 1){
+				height = 1
+			}
+			switch xy.matrix[y][x] {
+			case MacroMapTypeRoad:
+				fallthrough;
+			case MacroMapTypeAllyPoint:
+				fallthrough;
+			case MacroMapTypeEnemyPoint:
+				break;
+			default:
+				xy.matrix[y][x] = MacroMapTypeRough
+				xy.high[y][x] = height
 			}
 		}
 	}
