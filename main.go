@@ -52,18 +52,19 @@ func flow(condition GameMapCondition) {
 	game_map.bindToGameParts(gamePartsDict)
 
 	//バリデーション
-
 	fmt.Println("====drawMap====")
+
 	//png生成
 	game_map.createPng(gamePartsDict)
 
 	//json_export
+
 }
 
 //雑に100回まわしてみる
 func bulc(condition GameMapCondition) {
 	//x := 100
-	x := 100
+	x := 1
 	for x > 0 {
 		x--
 		flow(condition)

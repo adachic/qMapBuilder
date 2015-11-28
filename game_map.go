@@ -454,7 +454,7 @@ func (game_map *GameMap) bindToGameParts(gamePartsDict map[string]GameParts) {
 				//1.土
 				if (z < high) {
 					parts := GetGamePartsFoundation(idsWall, idsRough, idsRoad, gamePartsDict);
-					fmt.Printf("found  : %2d,%2d,%2d id:%s macro[%v]\n", z, y, x, parts.Id, macro)
+					fmt.Printf("found  : %2d,%2d,%2d id:%s \n", z, y, x, parts.Id)
 					game_map.JungleGym[z][y][x] = parts;
 					continue;
 				}
@@ -481,14 +481,15 @@ func imageTile32(tile Tile) *image.RGBA {
 		return nil
 	}
 	//	tileRect := image.Rect(tile.X, tile.Y, tile.Width, tile.Height)
+	yy :=  img.Bounds().Max.Y - tile.Y  - tile.Height;
 
-		outputRect := image.Rect(0, 0, tile.Width, tile.Height)
-		outputImg := image.NewRGBA(outputRect)
-		for x := 0; x < outputRect.Max.X; x++ {
-			for y := 0; y < outputRect.Max.Y; y++ {
-				outputImg.Set(x, y, img.At(tile.X + x, tile.Y + y))
-			}
+	outputRect := image.Rect(0, 0, tile.Width, tile.Height)
+	outputImg := image.NewRGBA(outputRect)
+	for x := 0; x < outputRect.Max.X; x++ {
+		for y := 0; y < outputRect.Max.Y; y++ {
+			outputImg.Set(x, y, img.At(tile.X + x, yy + y))
 		}
+	}
 	return outputImg
 }
 
@@ -506,12 +507,13 @@ func imageTile64(tile Tile) *image.RGBA {
 		return nil
 	}
 	//	tileRect := image.Rect(tile.X, tile.Y, tile.Width, tile.Height)
+	yy :=  img.Bounds().Max.Y - tile.Y  - tile.Height;
 
-	outputRect := image.Rect(0, 0, tile.Width/2, tile.Height/2)
+	outputRect := image.Rect(0, 0, tile.Width / 2, tile.Height / 2)
 	outputImg := image.NewRGBA(outputRect)
 	for x := 0; x < outputRect.Max.X; x++ {
 		for y := 0; y < outputRect.Max.Y; y++ {
-			outputImg.Set(x, y, img.At(tile.X + x*2, tile.Y + y*2))
+			outputImg.Set(x, y, img.At(tile.X + x * 2, yy + y * 2))
 		}
 	}
 	return outputImg
@@ -523,7 +525,7 @@ func clipAfromB(srcImg *image.RGBA, srcRect image.Rectangle, dstImg *image.RGBA,
 		for y := 0; y < srcRect.Max.Y; y++ {
 			srcRGBA := srcImg.At(x, y)
 			_, _, _, a := srcRGBA.RGBA()
-			if(a == 0){
+			if (a == 0) {
 				//0は透明
 				continue
 			}
@@ -537,8 +539,8 @@ func (game_map *GameMap) targetDrawPoint(x int, y int, z int) image.Point {
 	xx := (x) * 16 + (y) * 16
 	yy := (game_map.Size.MaxZ - z) * 16 +
 	(game_map.Size.MaxY - y) * 8 +
-	x * 8 ;
-//	yy := (8 * x * -1) + (8 * y) + (16 * z)
+	x * 8;
+	//	yy := (8 * x * -1) + (8 * y) + (16 * z)
 	return image.Point{xx, yy}
 }
 
@@ -557,7 +559,7 @@ func (game_map *GameMap) updateMaxZ() {
 	maxHigh := 0
 	for y := 0; y < game_map.Size.MaxY; y++ {
 		for x := 0; x < game_map.Size.MaxX; x++ {
-			if(maxHigh < game_map.High[y][x]){
+			if (maxHigh < game_map.High[y][x]) {
 				maxHigh = game_map.High[y][x]
 			}
 		}
@@ -570,7 +572,7 @@ func (game_map *GameMap) createPng(gamePartsDict map[string]GameParts) {
 	game_map.updateMaxZ();
 
 	outputWidth := 16 + game_map.Size.MaxX * 16 + (game_map.Size.MaxY - 1) * 16
-	outputHeight := 16 + game_map.Size.MaxX * 8 + game_map.Size.MaxY * 8 + game_map.Size.MaxZ* 16
+	outputHeight := 16 + game_map.Size.MaxX * 8 + game_map.Size.MaxY * 8 + game_map.Size.MaxZ * 16
 	outputRect := image.Rect(0, 0, outputWidth, outputHeight)
 
 	fmt.Printf("aho1:%+v\n", outputRect)
@@ -596,21 +598,21 @@ func (game_map *GameMap) createPng(gamePartsDict map[string]GameParts) {
 					//fmt.Printf("gomi:%d,%d,%d\n", z, y, x)
 					continue
 				}
-//				fmt.Printf("unko: %d,%d,%d\n", z, y, x)
-//				fmt.Printf("cube: %+v\n", cube)
+				//				fmt.Printf("unko: %d,%d,%d\n", z, y, x)
+				//				fmt.Printf("cube: %+v\n", cube)
 
 				//切り出す
 				tile := cube.Tiles[0]
 				var tileImage *image.RGBA
-				if(cube.RezoType == RezoTypeRect64){
+				if (cube.RezoType == RezoTypeRect64) {
 					tileImage = imageTile64(tile)
-				}else{
+				}else {
 					tileImage = imageTile32(tile)
 				}
 				tileRect := image.Rect(0, 0, tile.Width, tile.Height)
 
 				//バッファへ貼り付け
-				dstPoint := game_map.targetDrawPoint(x,y,z)
+				dstPoint := game_map.targetDrawPoint(x, y, z)
 				//dstPoint := targetDrawPoint(x, y, z)
 				dstRect := image.Rect(dstPoint.X, dstPoint.Y, outputWidth, outputHeight)
 				clipAfromB(tileImage, tileRect, outputImg, dstRect)
@@ -621,7 +623,7 @@ func (game_map *GameMap) createPng(gamePartsDict map[string]GameParts) {
 
 	//ファイル出力
 	fileName := uuid.NewV4().String()
-	file, err := os.Create("./output/"+fileName + ".png")
+	file, err := os.Create("./output/" + fileName + ".png")
 	defer file.Close()
 	if err != nil {
 		fmt.Println(err)

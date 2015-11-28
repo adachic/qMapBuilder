@@ -210,18 +210,21 @@ func GetGamePartsFoundation(idsWall []int, idsRough []int, idsRoad []int, gamePa
 	wallIdsCount := len(idsWall)
 	if(wallIdsCount > 0){
 //		id := lottery.GetRandomInt(0, wallIdsCount)
+		fmt.Printf("wall id: %2d", idsWall[0])
 		return gamePartsDict[strconv.Itoa(idsWall[0])]
 	}
 
 	roughIdsCount := len(idsRough)
 	if(roughIdsCount > 0){
 		id := lottery.GetRandomInt(0, roughIdsCount)
+		fmt.Printf("rough id: %2d", idsRough[0])
 		return gamePartsDict[strconv.Itoa(idsRough[id])]
 	}
 
 	roadIdsCount := len(idsRoad)
 	if(roadIdsCount > 0){
 		id := lottery.GetRandomInt(0,roadIdsCount)
+		fmt.Printf("road id: %2d", idsRoad[0])
 		return gamePartsDict[strconv.Itoa(idsRoad[id])]
 	}
 	return GameParts{}
