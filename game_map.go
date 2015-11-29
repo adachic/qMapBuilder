@@ -437,34 +437,92 @@ func (game_map *GameMap) copyFromXY(xy *xymap) {
 }
 
 //パーツとのひも付け
-func (game_map *GameMap) bindToGameParts(gamePartsDict map[string]GameParts) {
+//失敗ならfalse
+func (game_map *GameMap) bindToGameParts(gamePartsDict map[string]GameParts) bool{
 	/*選定パーツのゾーニング*/
 	//1.主幹パーツの決定:道・ラフ・その他
 
-	idsRoad := GetIdsRoad(game_map, gamePartsDict)
-	idsRough := GetIdsRough(game_map, gamePartsDict)
-	idsWall := GetIdsWall(game_map, gamePartsDict)
+	idsRoadFull := GetIdsRoad(game_map, gamePartsDict, false)
+	idsRoughFull := GetIdsRough(game_map, gamePartsDict, false)
+	idsWallFull := GetIdsWall(game_map, gamePartsDict, false)
+
+	idsRoadHalf := GetIdsRoad(game_map, gamePartsDict, true)
+	idsRoughHalf := GetIdsRough(game_map, gamePartsDict, true)
+	idsWallHalf := GetIdsWall(game_map, gamePartsDict, true)
+	if (len(idsRoadHalf) == 0 || len(idsRoughHalf) == 0 || len(idsWallHalf) == 0) {
+		if(len(idsRoadHalf) == 0){
+			if(len(idsRoughHalf) != 0){
+				idsRoadHalf = idsRoughHalf
+			}
+			if(len(idsWallHalf) != 0){
+				idsRoadHalf = idsWallHalf
+			}
+		}
+		if(len(idsRoughHalf) == 0){
+			if(len(idsRoadHalf) != 0){
+				idsRoughHalf = idsRoadHalf
+			}
+			if(len(idsWallHalf) != 0){
+				idsRoughHalf = idsWallHalf
+			}
+		}
+		if(len(idsWallHalf) == 0){
+			if(len(idsRoadHalf) != 0){
+				idsWallHalf = idsRoughHalf
+			}
+			if(len(idsRoughHalf) != 0){
+				idsWallHalf = idsRoughHalf
+			}
+		}
+		if (len(idsRoadHalf) == 0 || len(idsRoughHalf) == 0 || len(idsWallHalf) == 0) {
+			return false
+		}
+	}
 
 	//2.パーツ割当
 	for x := 0; x < game_map.Size.MaxX; x++ {
 		for y := 0; y < game_map.Size.MaxY; y++ {
 			high := game_map.High[y][x];
 			for z := 0; z < high; z++ {
+
+				shouldHalf := ((high - 1) == z && (high % 2) > 0 )
+
+				/*
+				//half段目か？であれば、halfとし、それ以外は非half
+				if((high - 1) == z && high%2 ){
+					//half確定
+				}else{
+				}
+				*/
+
 				macro := game_map.MacroMapTypes[z][y][x]
 				//1.土
 				if (z < high - 1) {
-					parts := GetGamePartsFoundation(idsWall, idsRough, idsRoad, gamePartsDict, x, y, z);
+					parts := GetGamePartsFoundation(idsWallFull, idsRoughFull, idsRoadFull, gamePartsDict, x, y, z);
 					fmt.Printf("found  : %2d,%2d,%2d id:%s \n", z, y, x, parts.Id)
+					if (shouldHalf) {
+						//halfにコンバートする
+						before := parts.Id
+						parts = GetHalfParts(idsRoadHalf, idsRoughHalf, idsWallHalf, parts, gamePartsDict, macro, x, y, z)
+						fmt.Printf("converted from %s to %s \n", before, parts.Id)
+					}
 					game_map.JungleGym[z][y][x] = parts;
 					continue;
 				}
 				//2.表層(道,ラフ,壁)
-				parts := GetGamePartsSurface(idsWall, idsRough, idsRoad, gamePartsDict, macro, x, y, z);
+				parts := GetGamePartsSurface(idsWallFull, idsRoughFull, idsRoadFull, gamePartsDict, macro, x, y, z);
 				fmt.Printf("surface: %2d,%2d,%2d id:%s macro[%v]\n", z, y, x, parts.Id, macro)
+				if (shouldHalf) {
+					//halfにコンバートする
+					before := parts.Id
+					parts = GetHalfParts(idsRoadHalf, idsRoughHalf, idsWallHalf, parts, gamePartsDict, macro, x, y, z)
+					fmt.Printf("converted from %s to %s \n", before, parts.Id)
+				}
 				game_map.JungleGym[z][y][x] = parts;
 			}
 		}
 	}
+	return true
 }
 
 //tileのimageを得る
@@ -537,7 +595,7 @@ func clipAfromB(srcImg *image.RGBA, srcRect image.Rectangle, dstImg *image.RGBA,
 //x,y,zの起点座標の計算
 func (game_map *GameMap) targetDrawPoint(x int, y int, z int) image.Point {
 	xx := (x) * 16 + (y) * 16
-	yy := (game_map.Size.MaxZ - z) * 16 +
+	yy := (game_map.Size.MaxZ - z) * 16 / 2 +
 	(game_map.Size.MaxY - y) * 8 +
 	x * 8;
 	//	yy := (8 * x * -1) + (8 * y) + (16 * z)
@@ -598,8 +656,15 @@ func (game_map *GameMap) createPng(gamePartsDict map[string]GameParts) {
 					//fmt.Printf("gomi:%d,%d,%d\n", z, y, x)
 					continue
 				}
-				//				fmt.Printf("unko: %d,%d,%d\n", z, y, x)
-				//				fmt.Printf("cube: %+v\n", cube)
+				if (z % 2 > 0) {
+					//レンダリングしなくて良い
+					continue
+				}
+				if (!cube.Harf) {
+					cube = game_map.JungleGym[z + 1][y][x]
+				}
+				//fmt.Printf("unko: %d,%d,%d\n", z, y, x)
+				//fmt.Printf("cube: %+v\n", cube)
 
 				//切り出す
 				tile := cube.Tiles[0]

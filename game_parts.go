@@ -62,6 +62,7 @@ type GameParts struct {
 
 	Walkable      bool   //`json:"walkable"`
 	Harf          bool   //`json:"harf"`
+	HarfId        string //`json:"id"`
 	RezoType      RezoTypeRect `json:"rezo"`
 
 	Snow          int
@@ -125,7 +126,8 @@ func (p Roads) Less(i, j int) bool {
 }
 
 //主幹となる道の種類を決定し、id群を返す
-func GetIdsRoad(game_map *GameMap, gamePartsDict map[string]GameParts) []int {
+//halfがtrueだとhalfだけを抽出する、falseだと非halfだけを抽出
+func GetIdsRoad(game_map *GameMap, gamePartsDict map[string]GameParts, half bool) []int {
 	var partsRoads Roads
 	var idsRoad []int
 
@@ -137,6 +139,9 @@ func GetIdsRoad(game_map *GameMap, gamePartsDict map[string]GameParts) []int {
 		}
 		if (!IsIncludedMacroType(parts, MacroMapTypeRoad)) {
 			//			fmt.Printf("unko2%+v, %+v\n", parts.,game_map.Category)
+			continue
+		}
+		if (parts.Harf != half) {
 			continue
 		}
 		//		fmt.Printf("unko3\n")
@@ -156,7 +161,7 @@ func GetIdsRoad(game_map *GameMap, gamePartsDict map[string]GameParts) []int {
 }
 
 //主幹となるラフの種類を決定し、id群を返す
-func GetIdsRough(game_map *GameMap, gamePartsDict map[string]GameParts) []int {
+func GetIdsRough(game_map *GameMap, gamePartsDict map[string]GameParts, half bool) []int {
 	var partsRoughs Roads
 	var idsRough []int
 
@@ -166,6 +171,9 @@ func GetIdsRough(game_map *GameMap, gamePartsDict map[string]GameParts) []int {
 			continue
 		}
 		if (!IsIncludedMacroType(parts, MacroMapTypeRough)) {
+			continue
+		}
+		if (parts.Harf != half) {
 			continue
 		}
 		partsRoughs = append(partsRoughs, parts)
@@ -183,7 +191,7 @@ func GetIdsRough(game_map *GameMap, gamePartsDict map[string]GameParts) []int {
 }
 
 //主幹となる壁の種類を決定し、id群を返す
-func GetIdsWall(game_map *GameMap, gamePartsDict map[string]GameParts) []int {
+func GetIdsWall(game_map *GameMap, gamePartsDict map[string]GameParts, half bool) []int {
 	var partsWalls Roads
 	var idsWall []int
 
@@ -193,6 +201,9 @@ func GetIdsWall(game_map *GameMap, gamePartsDict map[string]GameParts) []int {
 			continue
 		}
 		if (!IsIncludedMacroType(parts, MacroMapTypeWall)) {
+			continue
+		}
+		if (parts.Harf != half) {
 			continue
 		}
 		partsWalls = append(partsWalls, parts)
@@ -245,6 +256,40 @@ gamePartsDict map[string]GameParts, macro MacroMapType, x int, y int, z int) Gam
 	idx := GetIdxWithEval3(x, y, z, idsWall)
 	id := idsWall[idx]
 	return gamePartsDict[strconv.Itoa(id)]
+}
+
+//partsのhalf相当を選択し、返す
+func GetHalfParts(idsRoad []int, idsRough []int, idsWall []int, srcParts GameParts,
+gamePartsDict map[string]GameParts, macro MacroMapType,
+x int, y int, z int) GameParts {
+	srcId, _ := strconv.Atoi(srcParts.Id)
+	for _, value := range idsRoad {
+		halfId , _ := strconv.Atoi(gamePartsDict[strconv.Itoa(value)].HarfId)
+		if (halfId == srcId) {
+			return gamePartsDict[strconv.Itoa(value)];
+		}
+	}
+	for _, value := range idsWall {
+		halfId , _ := strconv.Atoi(gamePartsDict[strconv.Itoa(value)].HarfId)
+		if (halfId == srcId) {
+			return gamePartsDict[strconv.Itoa(value)];
+		}
+	}
+	for _, value := range idsRough {
+		halfId , _ := strconv.Atoi(gamePartsDict[strconv.Itoa(value)].HarfId)
+		if (halfId == srcId) {
+			return gamePartsDict[strconv.Itoa(value)];
+		}
+	}
+	switch(macro){
+	case MacroMapTypeRoad:
+		return GetGamePartsRoad(idsWall, idsRough, idsRoad, gamePartsDict, macro, x, y, z);
+	case MacroMapTypeRough:
+		return GetGamePartsRough(idsWall, idsRough, idsRoad, gamePartsDict, macro, x, y, z);
+	case MacroMapTypeWall:
+		return GetGamePartsWall(idsWall, idsRough, idsRoad, gamePartsDict, macro, x, y, z);
+	}
+	return GetGamePartsRough(idsWall, idsRough, idsRoad, gamePartsDict, macro, x, y, z);
 }
 
 //土を返す

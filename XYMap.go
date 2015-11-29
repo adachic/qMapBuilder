@@ -329,27 +329,28 @@ func (xy *xymap) makeGradient(geo Geographical) {
 	//険しさ(勾配の範囲)
 //	steepness := 0
 	//まず地形でだいたいの高さ
+	coefficient := 3
 	switch geo {
 	case GeographicalStep:
-		rowestHigh = 3
+		rowestHigh = 3 * coefficient
 		break
 	case GeographicalMountain:
-		rowestHigh = 7
+		rowestHigh = 7* coefficient
 		break
 	case GeographicalCave:
-		rowestHigh = 7
+		rowestHigh = 7* coefficient
 		break
 	case GeographicalFort:
-		rowestHigh = 4
+		rowestHigh = 4* coefficient
 		break
 	case GeographicalShrine:
-		rowestHigh = 4
+		rowestHigh = 4* coefficient
 		break
 	case GeographicalTown:
-		rowestHigh = 4
+		rowestHigh = 4* coefficient
 		break
 	case GeographicalCastle:
-		rowestHigh = 4
+		rowestHigh = 4* coefficient
 		break
 	}
 

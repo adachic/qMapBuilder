@@ -18,7 +18,8 @@ func main() {
 
 	//pre;
 	//- [] パーツ情報のロード
-	gamePartsDict = CreateGamePartsDict("./assets/IntegratedPartsAll.json")
+	//gamePartsDict = CreateGamePartsDict("./assets/IntegratedPartsAll.json")
+	gamePartsDict = CreateGamePartsDict("./assets/IntegratedPartsAll2.json") //harfId対応済み
 
 	//loop;
 	//- [] アルゴリズムで自動生成
@@ -49,7 +50,10 @@ func flow(condition GameMapCondition) {
 	fmt.Println("====bind====")
 
 	//実際のパーツとのひも付け
-	game_map.bindToGameParts(gamePartsDict)
+	if(!game_map.bindToGameParts(gamePartsDict)){
+		fmt.Println("====dame===")
+		return;
+	}
 
 	//バリデーション
 	fmt.Println("====drawMap====")
