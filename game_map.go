@@ -12,6 +12,7 @@ import (
 	"os"
 	"github.com/satori/go.uuid"
 	"image/color"
+	"encoding/json"
 )
 
 //マップの大きさ
@@ -370,24 +371,6 @@ func (game_map *GameMap) initEnemyStartPoints() {
 	game_map.EnemyStartPoints = sattyPoints
 }
 
-//マップ
-type GameMap struct {
-	JungleGym        [][][]GameParts
-	MacroMapTypes    [][][]MacroMapType
-	High             [][]int
-
-	Size             GameMapSize
-
-	AllyStartPoint   GameMapPosition
-	EnemyStartPoints []GameMapPosition
-
-	Difficult        Difficult
-	Geographical     Geographical
-	Category         Category
-	IsSnow           bool
-	PavementLv       int
-}
-
 func (game_map *GameMap)fillJungleGymToEmpty() {
 	for z := 0; z < game_map.Size.MaxZ; z++ {
 		for y := 0; y < game_map.Size.MaxY; y++ {
@@ -438,7 +421,7 @@ func (game_map *GameMap) copyFromXY(xy *xymap) {
 
 //パーツとのひも付け
 //失敗ならfalse
-func (game_map *GameMap) bindToGameParts(gamePartsDict map[string]GameParts) bool{
+func (game_map *GameMap) bindToGameParts(gamePartsDict map[string]GameParts) bool {
 	/*選定パーツのゾーニング*/
 	//1.主幹パーツの決定:道・ラフ・その他
 
@@ -450,27 +433,27 @@ func (game_map *GameMap) bindToGameParts(gamePartsDict map[string]GameParts) boo
 	idsRoughHalf := GetIdsRough(game_map, gamePartsDict, true)
 	idsWallHalf := GetIdsWall(game_map, gamePartsDict, true)
 	if (len(idsRoadHalf) == 0 || len(idsRoughHalf) == 0 || len(idsWallHalf) == 0) {
-		if(len(idsRoadHalf) == 0){
-			if(len(idsRoughHalf) != 0){
+		if (len(idsRoadHalf) == 0) {
+			if (len(idsRoughHalf) != 0) {
 				idsRoadHalf = idsRoughHalf
 			}
-			if(len(idsWallHalf) != 0){
+			if (len(idsWallHalf) != 0) {
 				idsRoadHalf = idsWallHalf
 			}
 		}
-		if(len(idsRoughHalf) == 0){
-			if(len(idsRoadHalf) != 0){
+		if (len(idsRoughHalf) == 0) {
+			if (len(idsRoadHalf) != 0) {
 				idsRoughHalf = idsRoadHalf
 			}
-			if(len(idsWallHalf) != 0){
+			if (len(idsWallHalf) != 0) {
 				idsRoughHalf = idsWallHalf
 			}
 		}
-		if(len(idsWallHalf) == 0){
-			if(len(idsRoadHalf) != 0){
+		if (len(idsWallHalf) == 0) {
+			if (len(idsRoadHalf) != 0) {
 				idsWallHalf = idsRoughHalf
 			}
-			if(len(idsRoughHalf) != 0){
+			if (len(idsRoughHalf) != 0) {
 				idsWallHalf = idsRoughHalf
 			}
 		}
@@ -637,7 +620,6 @@ func (game_map *GameMap) createPng(gamePartsDict map[string]GameParts) {
 
 	//出力するイメージ
 	outputImg := image.NewRGBA(outputRect)
-	fmt.Printf("aho11:\n")
 
 	//塗りつぶす
 	for x := 0; x < outputRect.Max.X; x++ {
@@ -647,7 +629,7 @@ func (game_map *GameMap) createPng(gamePartsDict map[string]GameParts) {
 		}
 	}
 
-	fmt.Printf("aho2:\n")
+	fmt.Printf("aho2:rendering...\n")
 	for z := 0; z <= game_map.Size.MaxZ; z++ {
 		for y := (game_map.Size.MaxY - 1); y >= 0; y-- {
 			for x := 0; x < game_map.Size.MaxX; x++ {
@@ -684,10 +666,11 @@ func (game_map *GameMap) createPng(gamePartsDict map[string]GameParts) {
 			}
 		}
 	}
-	fmt.Printf("aho3:")
+	fmt.Printf("aho3:drawed")
 
 	//ファイル出力
 	fileName := uuid.NewV4().String()
+	game_map.Filename = fileName
 	file, err := os.Create("./output/" + fileName + ".png")
 	defer file.Close()
 	if err != nil {
@@ -699,5 +682,92 @@ func (game_map *GameMap) createPng(gamePartsDict map[string]GameParts) {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	fmt.Printf("aho4:")
+	fmt.Printf("aho4:png outputed")
+}
+
+//マップ
+type GameMap struct {
+	JungleGym        [][][]GameParts
+	MacroMapTypes    [][][]MacroMapType
+	High             [][]int
+
+	Size             GameMapSize
+
+	AllyStartPoint   GameMapPosition
+	EnemyStartPoints []GameMapPosition
+
+	Difficult        Difficult
+	Geographical     Geographical
+	Category         Category
+	IsSnow           bool
+	PavementLv       int
+
+	Filename         string
+}
+
+type JsonPanel struct {
+	X int `json:"x"`
+	Y int `json:"y"`
+	Z int `json:"z"`
+	Id string `json:"id"`
+}
+
+//マップ
+type JsonGameMap struct {
+	MaxX int `json:"maxX"`
+	MaxY int `json:"maxY"`
+	MaxZ int `json:"maxZ"`
+	AspectX int `json:"aspectX"`
+	AspectY int `json:"aspectY"`
+	AspectT int `json:"aspectT"`
+	JungleGym []JsonPanel `json:"jungleGym"`
+	GameParts []GameParts `json:"gameParts"`
+}
+
+
+//Json生成
+func (game_map *GameMap) createJson(gamePartsDict map[string]GameParts) {
+	fmt.Printf("==output json==\n")
+
+	jsonStub := JsonGameMap{
+		MaxX:game_map.Size.MaxX,
+		MaxY:game_map.Size.MaxY,
+		MaxZ:game_map.Size.MaxZ,
+		AspectX:32,
+		AspectY:16,
+		AspectT:16,
+	}
+
+	var flags map[string]GameParts
+	for z := 0; z < game_map.Size.MaxZ; z++ {
+		for y := 0; y < game_map.Size.MaxY; y++ {
+			for x := 0; x < game_map.Size.MaxX; x++ {
+				cube := game_map.JungleGym[z][y][x]
+				if (cube.IsEmpty) {
+					continue
+				}
+				jsonStub.JungleGym = append(jsonStub.JungleGym, JsonPanel{X:x, Y:y, Z:z, Id:cube.Id})
+				_, ok := flags[cube.Id]
+				if (!ok) {
+					jsonStub.GameParts = append(jsonStub.GameParts, cube)
+				}
+			}
+		}
+	}
+	fmt.Printf("%+v\n", jsonStub)
+
+	bytes, json_err := json.Marshal(jsonStub)
+	if json_err != nil {
+		fmt.Println("Json Encode Error: ", json_err)
+	}
+
+	fmt.Printf("bytes:%+v\n", string(bytes))
+
+	file, err := os.Create("./output/" + game_map.Filename + ".json")
+	_, err = file.Write(bytes)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer file.Close()
 }

@@ -57,12 +57,12 @@ type Tile struct {
 }
 
 type GameParts struct {
-	Id            string //`json:"id"`
-	Tiles         []Tile //`json:"tiles"`
+	Id            string `json:"id"`
+	Tiles         []Tile `json:"tiles"`
 
-	Walkable      bool   //`json:"walkable"`
-	Harf          bool   //`json:"harf"`
-	HarfId        string //`json:"id"`
+	Walkable      bool   `json:"walkable"`
+	Harf          bool   `json:"harf"`
+	HarfId        string `json:"harfId"`
 	RezoType      RezoTypeRect `json:"rezo"`
 
 	Snow          int
@@ -75,7 +75,6 @@ type GameParts struct {
 
 	IsEmpty       bool
 }
-
 
 //jsonから辞書作成
 func CreateGamePartsDict(filePath string) map[string]GameParts {
