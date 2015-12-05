@@ -746,6 +746,13 @@ func (game_map *GameMap) createJson(gamePartsDict map[string]GameParts) {
 				if (cube.IsEmpty) {
 					continue
 				}
+				if (z % 2 > 0) {
+					//レンダリングしなくて良い
+					continue
+				}
+				if (!cube.Harf) {
+					cube = game_map.JungleGym[z + 1][y][x]
+				}
 				jsonStub.JungleGym = append(jsonStub.JungleGym, JsonPanel{X:x, Y:y, Z:z, Id:cube.Id})
 				_, ok := flags[cube.Id]
 				if (!ok) {
