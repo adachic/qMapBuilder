@@ -642,6 +642,10 @@ func (game_map *GameMap) createPng(gamePartsDict map[string]GameParts) {
 					//レンダリングしなくて良い
 					continue
 				}
+				if (game_map.shouldLightening(x, y, z)) {
+					//肉抜き
+					continue
+				}
 				if (!cube.Harf) {
 					cube = game_map.JungleGym[z + 1][y][x]
 				}
@@ -666,7 +670,7 @@ func (game_map *GameMap) createPng(gamePartsDict map[string]GameParts) {
 			}
 		}
 	}
-	fmt.Printf("aho3:drawed")
+	fmt.Printf("aho3:drawed\n")
 
 	//ファイル出力
 	fileName := uuid.NewV4().String()
@@ -682,7 +686,7 @@ func (game_map *GameMap) createPng(gamePartsDict map[string]GameParts) {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	fmt.Printf("aho4:png outputed")
+	fmt.Printf("aho4:png outputed\n")
 }
 
 //マップ
@@ -706,20 +710,20 @@ type GameMap struct {
 }
 
 type JsonPanel struct {
-	X int `json:"x"`
-	Y int `json:"y"`
-	Z int `json:"z"`
+	X  int `json:"x"`
+	Y  int `json:"y"`
+	Z  int `json:"z"`
 	Id string `json:"id"`
 }
 
 //マップ
 type JsonGameMap struct {
-	MaxX int `json:"maxX"`
-	MaxY int `json:"maxY"`
-	MaxZ int `json:"maxZ"`
-	AspectX int `json:"aspectX"`
-	AspectY int `json:"aspectY"`
-	AspectT int `json:"aspectT"`
+	MaxX      int `json:"maxX"`
+	MaxY      int `json:"maxY"`
+	MaxZ      int `json:"maxZ"`
+	AspectX   int `json:"aspectX"`
+	AspectY   int `json:"aspectY"`
+	AspectT   int `json:"aspectT"`
 	JungleGym []JsonPanel `json:"jungleGym"`
 	GameParts []GameParts `json:"gameParts"`
 }
@@ -753,6 +757,10 @@ func (game_map *GameMap) createJson(gamePartsDict map[string]GameParts) {
 				if (!cube.Harf) {
 					cube = game_map.JungleGym[z + 1][y][x]
 				}
+				if (game_map.shouldLightening(x, y, z)) {
+					//肉抜き
+					continue
+				}
 				jsonStub.JungleGym = append(jsonStub.JungleGym, JsonPanel{X:x, Y:y, Z:z, Id:cube.Id})
 				_, ok := flags[cube.Id]
 				if (!ok) {
@@ -761,14 +769,14 @@ func (game_map *GameMap) createJson(gamePartsDict map[string]GameParts) {
 			}
 		}
 	}
-	fmt.Printf("%+v\n", jsonStub)
+	//	fmt.Printf("%+v\n", jsonStub)
 
 	bytes, json_err := json.Marshal(jsonStub)
 	if json_err != nil {
 		fmt.Println("Json Encode Error: ", json_err)
 	}
 
-	fmt.Printf("bytes:%+v\n", string(bytes))
+	//	fmt.Printf("bytes:%+v\n", string(bytes))
 
 	file, err := os.Create("./output/" + game_map.Filename + ".json")
 	_, err = file.Write(bytes)
@@ -778,3 +786,35 @@ func (game_map *GameMap) createJson(gamePartsDict map[string]GameParts) {
 	}
 	defer file.Close()
 }
+
+//該当パネルが肉抜きできるならtrue
+func (game_map *GameMap) shouldLightening(x int, y int, z int) bool {
+	//上のパネルがあるz+1
+	//上のパネルがあるz+2
+	//手前のパネルがあって、harfではないx+1,y-1
+	if (y - 1 < 0) {
+		return false;
+	}
+	if (x + 1 >= game_map.Size.MaxX) {
+		return false;
+	}
+	if (z + 1 >= game_map.Size.MaxZ) {
+		return false;
+	}
+	if (z + 2 >= game_map.Size.MaxZ) {
+		return false;
+	}
+	cube := game_map.JungleGym[z + 1][y][x]
+	cube2 := game_map.JungleGym[z][y - 1][x]
+	cube3 := game_map.JungleGym[z][y][x + 1]
+	cube4 := game_map.JungleGym[z + 2][y][x]
+	if (cube.IsEmpty || cube2.IsEmpty || cube3.IsEmpty || cube4.IsEmpty) {
+		return false
+	}
+	if (cube2.Harf || cube3.Harf) {
+		return false
+	}
+	return true
+}
+
+
