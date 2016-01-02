@@ -727,10 +727,11 @@ type JsonGameMap struct {
 	AspectY          int `json:"aspectY"`
 	AspectT          int `json:"aspectT"`
 	JungleGym        []JsonPanel `json:"jungleGym"`
-	GameParts []GameParts `json:"gameParts"`
+	GameParts        []GameParts `json:"gameParts"`
 
 	AllyStartPoint   GameMapPosition `json:"allyStartPoint"`
 	EnemyStartPoints []GameMapPosition `json:"enemyStartPoints"`
+	Category         Category `json:"category"`
 }
 
 //Json生成
@@ -752,6 +753,7 @@ func (game_map *GameMap) createJson(gamePartsDict map[string]GameParts) {
 		AspectT:16,
 		AllyStartPoint:game_map.AllyStartPoint,
 		EnemyStartPoints:game_map.EnemyStartPoints,
+		Category:game_map.Category,
 	}
 
 	var flags map[string]GameParts
