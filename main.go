@@ -32,11 +32,10 @@ func flow(condition GameMapCondition) {
 
 	//実際のパーツとのひも付け
 	if(!game_map.bindToGameParts(gamePartsDict)){
+		//紐付けるパーツがない
 		fmt.Println("====dame===")
 		return;
 	}
-
-	//バリデーション
 	fmt.Println("====drawMap====")
 
 	//png生成

@@ -408,3 +408,35 @@ func (xy *xymap) makeGradientRough(rowestHigh int) {
 		}
 	}
 }
+
+//通れない/ハマり地形を正す
+func (xy *xymap) validate() {
+	//階段の設置を検討
+
+	//窪み部分
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

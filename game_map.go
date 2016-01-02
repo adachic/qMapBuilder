@@ -68,7 +68,6 @@ const (
 	MacroMapTypeEnemyPoint
 )
 
-
 //alreadyに登録されてなくて自分を除く最も近いポイントを返す
 //errがtrueなら見つからなかった
 func (pos GameMapPosition) searchNearPositionWithOutMe(positions []GameMapPosition, alreadys []PathPosition) (nearPos GameMapPosition, err bool) {
@@ -110,9 +109,9 @@ func (pos GameMapPosition) distance(another GameMapPosition) int {
 
 //座標
 type GameMapPosition struct {
-	X int
-	Y int
-	Z int
+	X int `json:"x"`
+	Y int `json:"y"`
+	Z int `json:"z"`
 }
 
 //確率を返す
@@ -190,6 +189,9 @@ func (game_map *GameMap) init(condition GameMapCondition) *GameMap {
 		xymap.makeGradient(game_map.Geographical)
 
 		//水、毒沼配置
+
+		//バリデーション
+		xymap.validate()
 
 		//alloc/init
 		game_map.allocToJungleGym()
@@ -718,20 +720,28 @@ type JsonPanel struct {
 
 //マップ
 type JsonGameMap struct {
-	MaxX      int `json:"maxX"`
-	MaxY      int `json:"maxY"`
-	MaxZ      int `json:"maxZ"`
-	AspectX   int `json:"aspectX"`
-	AspectY   int `json:"aspectY"`
-	AspectT   int `json:"aspectT"`
-	JungleGym []JsonPanel `json:"jungleGym"`
+	MaxX             int `json:"maxX"`
+	MaxY             int `json:"maxY"`
+	MaxZ             int `json:"maxZ"`
+	AspectX          int `json:"aspectX"`
+	AspectY          int `json:"aspectY"`
+	AspectT          int `json:"aspectT"`
+	JungleGym        []JsonPanel `json:"jungleGym"`
 	GameParts []GameParts `json:"gameParts"`
-}
 
+	AllyStartPoint   GameMapPosition `json:"allyStartPoint"`
+	EnemyStartPoints []GameMapPosition `json:"enemyStartPoints"`
+}
 
 //Json生成
 func (game_map *GameMap) createJson(gamePartsDict map[string]GameParts) {
 	fmt.Printf("==output json==\n")
+
+	game_map.AllyStartPoint.Z = game_map.High[game_map.AllyStartPoint.Y][game_map.AllyStartPoint.X] - 1
+	for i, enemyStartPoint := range game_map.EnemyStartPoints { // キーは使われません
+		game_map.EnemyStartPoints[i].Z = game_map.High[game_map.EnemyStartPoints[i].Y][game_map.EnemyStartPoints[i].X] - 1
+		fmt.Printf("enemyStartPoint: %+v\n", enemyStartPoint)
+	}
 
 	jsonStub := JsonGameMap{
 		MaxX:game_map.Size.MaxX,
@@ -740,6 +750,8 @@ func (game_map *GameMap) createJson(gamePartsDict map[string]GameParts) {
 		AspectX:32,
 		AspectY:16,
 		AspectT:16,
+		AllyStartPoint:game_map.AllyStartPoint,
+		EnemyStartPoints:game_map.EnemyStartPoints,
 	}
 
 	var flags map[string]GameParts
@@ -769,6 +781,7 @@ func (game_map *GameMap) createJson(gamePartsDict map[string]GameParts) {
 			}
 		}
 	}
+
 	//	fmt.Printf("%+v\n", jsonStub)
 
 	bytes, json_err := json.Marshal(jsonStub)
