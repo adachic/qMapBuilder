@@ -13,6 +13,7 @@ import (
 	"github.com/satori/go.uuid"
 	"image/color"
 	"encoding/json"
+	"sort"
 )
 
 //マップの大きさ
@@ -327,7 +328,7 @@ func (game_map *GameMap) initAllyStartPoint() {
 	}
 	fmt.Print("seed", seed.Min, " ", seed.Max)
 	distanceFrom := lottery.GetRandomInt(seed.Min, seed.Max)
-	game_map.AllyStartPoint = CreateRandomPositionInMap(
+	game_map.AllyStartPoint , _= CreateRandomPositionInMap(
 		game_map.Size,
 		GameMapPosition{game_map.Size.MaxX / 2, game_map.Size.MaxY / 2, 0},
 		distanceFrom)
@@ -363,13 +364,23 @@ func (game_map *GameMap) initEnemyStartPoints() {
 		break
 	}
 	var sattyPoints []GameMapPosition
+	var radians []float64
 	for sattyPointNum > 0 {
 		sattyPointNum--
 		//味方ポイントからの距離
 		distance := lottery.GetRandomInt(rangeFrom.Min, rangeFrom.Max)
-		sattyPoint := CreateRandomPositionInMap(game_map.Size, game_map.AllyStartPoint, distance)
+		sattyPoint, radian := CreateRandomPositionInMap(game_map.Size, game_map.AllyStartPoint, distance)
 		sattyPoints = append(sattyPoints, sattyPoint)
+		radians = append(radians, radian)
 	}
+	//角度をソートする
+	sort.Float64s(radians)
+
+	//エッジ分を追加
+	var sattyPointsEdge []GameMapPosition
+	sattyPointsEdge = CreateEdgePositionInMap(game_map.Size, game_map.AllyStartPoint, radians)
+	sattyPoints = append(sattyPoints, sattyPointsEdge...)
+
 	game_map.EnemyStartPoints = sattyPoints
 }
 

@@ -9,16 +9,53 @@ import (
 	"time"
 )
 
+//criteriaを基準点とし、radiansの中間の角度へ線を伸ばし、四角形との接点の配列を返す
+//radiansはソート済みの角度の一覧
+func CreateEdgePositionInMap(mapSize GameMapSize, criteria GameMapPosition, radians []float64) (edges []GameMapPosition){
+	radNum := len(radians)
+	for i := 0 ; i < radNum; i++{
+		var middleRad float64
+		if i == 0 {
+			tmp := (radians[0] + 2.0 * math.Pi * radians[radNum - 1]) / 2.0
+			middleRad = radians[0] - tmp
+		} else {
+			middleRad = (radians[i] - radians[i-1]) / 2.0 + radians[i - 1]
+		}
+		//100あれば接点とぶつかるだろう
+		x := 100 * math.Cos(middleRad)
+		y := 100 * math.Sin(middleRad)
+		x2 := criteria.X + int(x)
+		y2 := criteria.Y + int(y)
+
+		if x2 >= mapSize.MaxX {
+			x2 = mapSize.MaxX - 1
+		}
+		if x2 < 0 {
+			x2 = 0
+		}
+		if y2 >= mapSize.MaxY {
+			y2 = mapSize.MaxY - 1
+		}
+		if y2 < 0 {
+			y2 = 0
+		}
+		edges = append(edges, GameMapPosition{x2, y2, 0})
+	}
+	return edges
+}
+
 //四角形のなかから座標を抽選で決定して返す
+//そして、criteriaからのradianも返す
 //サイズ、基準点、基準点からの距離
-func CreateRandomPositionInMap(mapSize GameMapSize, criteria GameMapPosition, distance int) GameMapPosition {
+func CreateRandomPositionInMap(mapSize GameMapSize, criteria GameMapPosition, distance int) (GameMapPosition ,float64){
 	var x2, y2 int
+	var radian float64
 	for {
 		//中央からの距離比率
 		distanceFrom := distance
 		//角度
 		degree := lottery.GetRandomInt(0, 360)
-		radian := float64(degree) / (math.Pi * 2.0)
+		radian = float64(degree) / (math.Pi * 2.0)
 		//半径
 		var r float64
 		if mapSize.MaxX > mapSize.MaxY {
@@ -68,7 +105,7 @@ func CreateRandomPositionInMap(mapSize GameMapSize, criteria GameMapPosition, di
 		break
 	}
 	//TODO:限界リトライ数を定める
-	return GameMapPosition{x2, y2, 0}
+	return GameMapPosition{x2, y2, 0}, radian
 }
 
 //長方形の形式の抽選結果を返す
