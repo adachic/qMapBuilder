@@ -47,7 +47,8 @@ func flow(condition GameMapCondition) {
 
 //雑に100回まわしてみる
 func bulc(condition GameMapCondition) {
-	x := 100
+//	x := 100
+	x := 1
 	wt := sync.WaitGroup{}
 	for x > 0 {
 		x--

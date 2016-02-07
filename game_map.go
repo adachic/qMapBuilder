@@ -749,9 +749,9 @@ type JsonGameMap struct {
 func (game_map *GameMap) createJson(gamePartsDict map[string]GameParts) {
 	fmt.Printf("==output json==\n")
 
-	game_map.AllyStartPoint.Z = game_map.High[game_map.AllyStartPoint.Y][game_map.AllyStartPoint.X]// - 1
+	game_map.AllyStartPoint.Z = game_map.High[game_map.AllyStartPoint.Y][game_map.AllyStartPoint.X]/2 // - 1
 	for i, enemyStartPoint := range game_map.EnemyStartPoints { // キーは使われません
-		game_map.EnemyStartPoints[i].Z = game_map.High[game_map.EnemyStartPoints[i].Y][game_map.EnemyStartPoints[i].X] //- 1
+		game_map.EnemyStartPoints[i].Z = game_map.High[game_map.EnemyStartPoints[i].Y][game_map.EnemyStartPoints[i].X]/2  //- 1
 		fmt.Printf("enemyStartPoint: %+v\n", enemyStartPoint)
 	}
 
@@ -786,7 +786,7 @@ func (game_map *GameMap) createJson(gamePartsDict map[string]GameParts) {
 					//肉抜き
 					continue
 				}
-				jsonStub.JungleGym = append(jsonStub.JungleGym, JsonPanel{X:x, Y:y, Z:z, Id:cube.Id})
+				jsonStub.JungleGym = append(jsonStub.JungleGym, JsonPanel{X:x, Y:y, Z:z/2, Id:cube.Id})
 				_, ok := flags[cube.Id]
 				if (!ok) {
 					jsonStub.GameParts = append(jsonStub.GameParts, cube)
