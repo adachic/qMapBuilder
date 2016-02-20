@@ -5,12 +5,14 @@ import (
 	"github.com/adachic/lottery"
 	"fmt"
 	"github.com/ojrac/opensimplex-go"
+	"strconv"
 )
 
 type xymap struct {
-	mapSize GameMapSize
-	matrix  [][]MacroMapType //種別
-	high    [][]int          //高さ
+	mapSize    GameMapSize
+	matrix     [][]MacroMapType //種別
+	high       [][]int          //高さ
+	zoneMarked bool
 }
 
 func (xy *xymap) getMatrix(x int, y int) MacroMapType {
@@ -296,6 +298,7 @@ func getMinMaxXY(path PathPosition) (minX int, maxX int, minY int, maxY int) {
 }
 
 func (xy *xymap) printMapForDebug() {
+	fmt.Printf("\n")
 	for y := (xy.mapSize.MaxY - 1); y >= 0; y-- {
 		fmt.Printf("%02d ", y)
 		for x := 0; x < xy.mapSize.MaxX; x++ {
@@ -316,7 +319,7 @@ func (xy *xymap) printMapForDebug() {
 		}
 		fmt.Print("   ")
 		for x := 0; x < xy.mapSize.MaxX; x++ {
-			fmt.Print(xy.high[y][x])
+			fmt.Printf("%2d",xy.high[y][x])
 		}
 		fmt.Print("\n")
 	}
@@ -327,7 +330,7 @@ func (xy *xymap) printMapForDebug() {
 func (xy *xymap) makeGradient(geo Geographical) {
 	rowestHigh := 0
 	//険しさ(勾配の範囲)
-//	steepness := 0
+	//	steepness := 0
 	//まず地形でだいたいの高さ
 	coefficient := 3
 	switch geo {
@@ -335,22 +338,22 @@ func (xy *xymap) makeGradient(geo Geographical) {
 		rowestHigh = 3 * coefficient
 		break
 	case GeographicalMountain:
-		rowestHigh = 7* coefficient
+		rowestHigh = 10 * coefficient
 		break
 	case GeographicalCave:
-		rowestHigh = 7* coefficient
+		rowestHigh = 8 * coefficient
 		break
 	case GeographicalFort:
-		rowestHigh = 4* coefficient
+		rowestHigh = 5 * coefficient
 		break
 	case GeographicalShrine:
-		rowestHigh = 4* coefficient
+		rowestHigh = 5 * coefficient
 		break
 	case GeographicalTown:
-		rowestHigh = 4* coefficient
+		rowestHigh = 4 * coefficient
 		break
 	case GeographicalCastle:
-		rowestHigh = 4* coefficient
+		rowestHigh = 4 * coefficient
 		break
 	}
 
@@ -363,7 +366,6 @@ func (xy *xymap) makeGradient(geo Geographical) {
 
 	//それ以外のところは2個あがったり下がったりさせる
 	//ラフ
-
 }
 
 //手前から道の高さを調整していく（歩けるように高さ調整していく）
@@ -388,10 +390,10 @@ func (xy *xymap) makeGradientRough(rowestHigh int) {
 	coefficient := 0.1
 	for y := 0; y < xy.mapSize.MaxY; y++ {
 		for x := 0; x < xy.mapSize.MaxX; x++ {
-			val := opensimplex.NewWithSeed(0).Eval2(float64(x)*coefficient, float64(y)*coefficient)
-			floatHeight := float64(critHeight) * (val + 1.0) /2.0
+			val := opensimplex.NewWithSeed(0).Eval2(float64(x) * coefficient, float64(y) * coefficient)
+			floatHeight := float64(critHeight) * (val + 1.0) / 2.0
 			height := int(floatHeight)
-			if(height < 1){
+			if (height < 1) {
 				height = 1
 			}
 			switch xy.matrix[y][x] {
@@ -409,12 +411,126 @@ func (xy *xymap) makeGradientRough(rowestHigh int) {
 	}
 }
 
+
+//x,yを含むつながっている歩行可能領域を返す
+func (xy *xymap) getNearHeightPanels(x int, y int, opened *[]GameMapPosition) *[]GameMapPosition {
+	return xy.openNearPanel(x, y, opened)
+}
+
+//上下左右のパネルをオープンし、歩行可能なら返す
+//x, y, openedはすでにオープンした累積
+func (xy *xymap) openNearPanel(x int, y int, opened *[]GameMapPosition) *[]GameMapPosition {
+	currentHight := xy.high[y][x]
+	fmt.Printf("open x:%d, y:%d, z:%d\n",x,y,currentHight);
+
+	if (xy.shouldOpen(currentHight, x, y, *opened)) {
+		*opened = append(*opened, GameMapPosition{X:x, Y:y, Z:currentHight})
+		fmt.Printf("opened1:%d\n",len(*opened));
+	}
+	if (xy.shouldOpen(currentHight, x, y - 1, *opened)) {
+		opens := xy.openNearPanel(x, y - 1, opened)
+		*opened = append(*opened, *opens...)
+		fmt.Printf("opened20:%d\n",len(*opened));
+		trim(opened)
+		fmt.Printf("opened2 :%d\n",len(*opened));
+	}
+	if (xy.shouldOpen(currentHight, x, y + 1, *opened)) {
+		opens := xy.openNearPanel(x, y + 1, opened)
+		*opened = append(*opened, *opens...)
+		trim(opened)
+		fmt.Printf("opened3:%d\n",len(*opened));
+	}
+	if (xy.shouldOpen(currentHight, x - 1, y, *opened)) {
+		opens := xy.openNearPanel(x - 1, y, opened)
+		*opened = append(*opened, *opens...)
+		trim(opened)
+		fmt.Printf("opened4:%d\n",len(*opened));
+	}
+	if (xy.shouldOpen(currentHight, x + 1, y, *opened)) {
+		opens := xy.openNearPanel(x + 1, y, opened)
+		*opened = append(*opened, *opens...)
+		trim(opened)
+		fmt.Printf("opened5:%d\n",len(*opened));
+	}
+	fmt.Printf("close x:%d, y:%d, z:%d\n",x,y,currentHight);
+//	trim(opened);
+	return opened
+}
+
+func trim(opened *[]GameMapPosition){
+	newOpenArray := []GameMapPosition{}
+	newOpened := map[string]GameMapPosition{}
+	for _, pos := range *opened {
+		key := pos.X + pos.Y * 100 + pos.Z * 10000
+		newOpened[strconv.Itoa(key)] = GameMapPosition{}
+	}
+	for key, _:= range newOpened {
+		val , _ := strconv.Atoi(key)
+		z := val/ 10000
+		y := (val% 10000)/ 100
+		x := val% 100
+		newOpenArray = append(newOpenArray, GameMapPosition{X:x,Y:y,Z:z})
+	}
+	*opened = newOpenArray
+	return;
+}
+
+//openすべきならtrue
+func (xy *xymap) shouldOpen(currentHigh int, x int, y int, opened []GameMapPosition) bool {
+	if (x >= xy.mapSize.MaxX || y >= xy.mapSize.MaxY || x < 0 || y < 0) {
+		//マップ領域外
+		return false;
+	}
+	if (xy.high[y][x] < (currentHigh - 2) || xy.high[y][x] > (currentHigh + 1)) {
+		//高さ的にアウト
+		return false;
+	}
+	for _, pos := range opened {
+		if pos.X == x && pos.Y == y {
+			//すでにオープンしていた
+			fmt.Printf("alreadyed x:%d, y:%d\n",x,y);
+			return false;
+		}
+	}
+	return true;
+}
+
 //通れない/ハマり地形を正す
 func (xy *xymap) validate() {
-	//階段の設置を検討
+	//各タイルを検証していって、ゾーニングする
+	totalOpened := []GameMapPosition{}
+	zones := [][]GameMapPosition{}
 
-	//窪み部分
+	i := 0
+	for y := 0; y < xy.mapSize.MaxY; y++ {
+		for x := 0; x < xy.mapSize.MaxX; x++ {
+			alreadyOpened := false
+			for _, pos := range totalOpened {
+				if pos.X == x && pos.Y == y {
+					//すでにオープンしていた
+					alreadyOpened = true
+				}
+			}
+			if alreadyOpened {
+				continue
+			}
+			opened := &[]GameMapPosition{}
+			zone := xy.getNearHeightPanels(x, y, opened)
+//			fmt.Printf("\nlen%d",len(zone))
+			if len(*zone) == 0 {
+				continue
+			}
+			totalOpened = append(totalOpened, *opened...)
 
+			zones = append(zones, []GameMapPosition{})
+			zones[i] = append(zones[i], *zone...)
+
+			totalOpened = append(totalOpened, *zone...)
+			i++
+			fmt.Printf("ahongo:%d x:%d,y:%d,z%d, opened:%d\n", i, x, y, xy.high[y][x], len(*zone))
+		}
+	}
+	fmt.Printf("unko50000")
 }
 
 
