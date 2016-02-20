@@ -385,7 +385,7 @@ func (game_map *GameMap) initEnemyStartPoints() {
 }
 
 func (game_map *GameMap)fillJungleGymToEmpty() {
-	for z := 0; z < game_map.Size.MaxZ; z++ {
+	for z := 0; z <= game_map.Size.MaxZ; z++ {
 		for y := 0; y < game_map.Size.MaxY; y++ {
 			for x := 0; x < game_map.Size.MaxX; x++ {
 				game_map.JungleGym[z][y][x] = GameParts{IsEmpty:true};
@@ -395,8 +395,8 @@ func (game_map *GameMap)fillJungleGymToEmpty() {
 }
 
 func (game_map *GameMap) allocToJungleGym() {
-	game_map.JungleGym = make([][][]GameParts, game_map.Size.MaxZ)
-	for z := 0; z < game_map.Size.MaxZ; z++ {
+	game_map.JungleGym = make([][][]GameParts, game_map.Size.MaxZ + 1)
+	for z := 0; z <= game_map.Size.MaxZ; z++ {
 		game_map.JungleGym[z] = make([][]GameParts, game_map.Size.MaxY)
 		for y := 0; y < game_map.Size.MaxY; y++ {
 			game_map.JungleGym[z][y] = make([]GameParts, game_map.Size.MaxX)
@@ -404,8 +404,8 @@ func (game_map *GameMap) allocToJungleGym() {
 	}
 	game_map.fillJungleGymToEmpty();
 
-	game_map.MacroMapTypes = make([][][]MacroMapType, game_map.Size.MaxZ)
-	for z := 0; z < game_map.Size.MaxZ; z++ {
+	game_map.MacroMapTypes = make([][][]MacroMapType, game_map.Size.MaxZ + 1)
+	for z := 0; z <= game_map.Size.MaxZ; z++ {
 		game_map.MacroMapTypes[z] = make([][]MacroMapType, game_map.Size.MaxY)
 		for y := 0; y < game_map.Size.MaxY; y++ {
 			game_map.MacroMapTypes[z][y] = make([]MacroMapType, game_map.Size.MaxX)
