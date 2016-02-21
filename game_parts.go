@@ -139,6 +139,9 @@ func GetIdsRoad(game_map *GameMap, gamePartsDict map[string]GameParts, half bool
 			//			fmt.Printf("unko%+v, %+v\n", parts.Category ,game_map.Category)
 			continue
 		}
+		if (game_map.isExcludedByGeography(parts)){
+			continue
+		}
 		if (!IsIncludedMacroType(parts, MacroMapTypeRoad)) {
 			//			fmt.Printf("unko2%+v, %+v\n", parts.,game_map.Category)
 			continue
@@ -172,6 +175,9 @@ func GetIdsRough(game_map *GameMap, gamePartsDict map[string]GameParts, half boo
 		if (parts.Category != game_map.Category) {
 			continue
 		}
+		if (game_map.isExcludedByGeography(parts)){
+			continue
+		}
 		if (!IsIncludedMacroType(parts, MacroMapTypeRough)) {
 			continue
 		}
@@ -200,6 +206,9 @@ func GetIdsWall(game_map *GameMap, gamePartsDict map[string]GameParts, half bool
 	//カテゴリ集合体
 	for _, parts := range gamePartsDict {
 		if (parts.Category != game_map.Category) {
+			continue
+		}
+		if (game_map.isExcludedByGeography(parts)){
 			continue
 		}
 		if (!IsIncludedMacroType(parts, MacroMapTypeWall)) {

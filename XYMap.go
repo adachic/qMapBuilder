@@ -325,9 +325,162 @@ func (xy *xymap) printMapForDebug() {
 	}
 }
 
+//水地形(池)を生成
+func (xy *xymap) makeSwamp(geo Geographical) {
+	//ゾーニング
+	zones := xy.zoningForMakeSwamp()
+	for _, val := range zones {
+		fmt.Printf("ahongoS:%d \n", len(val))
+	}
+
+	actualZones := trimZoneSizeForSwamp(zones, geo)
+
+	//どれくらい水を配置するのか？
+	mounts := mountsForSwamp(actualZones, geo)
+	fmt.Printf("mounts:%d \n", mounts)
+
+	//どのidxに配置するのか？
+	alreadyPutsIdx := []int{}
+	i := 0
+	for ; i < mounts; {
+		idx := lottery.GetRandomInt(0, len(actualZones))
+		if (idx > (len(actualZones) - 1)) {
+			idx = len(actualZones) - 1
+		}
+		contain := false
+		for _, val := range alreadyPutsIdx {
+			if idx == val {
+				contain = true
+			}
+		}
+		if contain {
+			continue
+		}
+		alreadyPutsIdx = append(alreadyPutsIdx, idx)
+		i++
+	}
+
+	//池を生成
+	for _, idx := range alreadyPutsIdx {
+		targetZone := actualZones[idx]
+		xy.putSwamp(targetZone, geo)
+	}
+}
+
+//池を生成
+func (xy *xymap) putSwamp(targetZone []GameMapPosition, geo Geographical) {
+	var swampType MacroMapType
+	swampType = MacroMapTypeSwampWater
+	switch geo {
+	case GeographicalStep:
+	case GeographicalCave:
+		swampType = MacroMapTypeSwampRava
+	case GeographicalSnow:
+	case GeographicalPoison:
+		swampType = MacroMapTypeSwampPoison
+	case GeographicalFire:
+	default:
+	}
+	for _, pos := range targetZone {
+		//harfか？
+		high := xy.high[pos.Y][pos.X]
+		if (high % 2) == 0 {
+			//harfじゃない
+			continue
+		}
+		//エッジ部分には水置かない
+		if (xy.isEdgeInZone(targetZone, pos)) {
+			continue
+		}
+		xy.matrix[pos.Y][pos.X] = swampType
+	}
+
+	//harfを水に置き換える
+
+	//harfがなければ掘削
+
+	//掘削した場所に水を作る
+
+}
+
+//posはzoneの中のエッジ部分ならtrue
+func (xy *xymap)isEdgeInZone(zone []GameMapPosition, pos GameMapPosition) bool {
+	NotEdgeTop := false
+	NotEdgeBottom := false
+	NotEdgeRight := false
+	NotEdgeLeft := false
+
+	for _,  posInZone := range zone {
+		if posInZone.X == pos.X - 1{
+			NotEdgeLeft = true
+		}
+		if posInZone.X == pos.X + 1{
+			NotEdgeRight = true
+		}
+		if posInZone.Y == pos.Y + 1{
+			NotEdgeTop = true
+		}
+		if posInZone.Y == pos.Y - 1{
+			NotEdgeBottom = true
+		}
+	}
+
+	return NotEdgeTop || NotEdgeBottom || NotEdgeRight || NotEdgeLeft
+}
+
+//zonesのなかから、池を張ってもいいくらいの大きさの広場を抽出する
+func trimZoneSizeForSwamp(zones [][]GameMapPosition, geo Geographical) [][]GameMapPosition {
+	filtered := [][]GameMapPosition{}
+	sizeToFilter := 0
+	switch geo {
+	case GeographicalStep:
+		sizeToFilter = 4
+	case GeographicalCave:
+		sizeToFilter = 2
+	case GeographicalSnow:
+		sizeToFilter = 4
+	case GeographicalPoison:
+		sizeToFilter = 2
+	case GeographicalFire:
+		sizeToFilter = 8
+	default:
+	}
+	i := 0
+	for _, zone := range zones {
+		if len(zone) > sizeToFilter {
+			filtered = append(filtered, []GameMapPosition{})
+			filtered[i] = append(filtered[i], zone...)
+			i++
+		}
+	}
+	return filtered
+}
+
+//いくつSwampを作るか？
+func mountsForSwamp(zones [][]GameMapPosition, geo Geographical) int {
+	zoneCounts := len(zones)
+	mountsPercents := 0
+	switch geo {
+	case GeographicalStep:
+		mountsPercents = lottery.GetRandomInt(0, 30)
+	case GeographicalCave:
+		mountsPercents = lottery.GetRandomInt(0, 50)
+	case GeographicalSnow:
+		mountsPercents = lottery.GetRandomInt(0, 30)
+	case GeographicalPoison:
+		mountsPercents = lottery.GetRandomInt(0, 70)
+	case GeographicalFire:
+		mountsPercents = lottery.GetRandomInt(0, 30)
+	default:
+	}
+	mounts := int(float64(zoneCounts * mountsPercents) / 100.0)
+	return mounts
+}
+
 //勾配を生成
 //ルール: x,yが大きいほど高い
 func (xy *xymap) makeGradient(geo Geographical) {
+	geta := 3
 	rowestHigh := 0
 	//険しさ(勾配の範囲)
 	//	steepness := 0
@@ -366,12 +519,14 @@ func (xy *xymap) makeGradient(geo Geographical) {
 		break
 	}
 
+	high := rowestHigh + geta
+
 	//手前から道の高さを調整していく（歩けるように高さ調整していく）
-	xy.makeGradientRoad(rowestHigh)
+	xy.makeGradientRoad(high)
 
 	//だんだんと段差になっていく
 	//パーリンノイズかける
-	xy.makeGradientRough(rowestHigh)
+	xy.makeGradientRough(high)
 
 	//それ以外のところは2個あがったり下がったりさせる
 	//ラフ
@@ -743,12 +898,110 @@ func (xy *xymap) zoningForValidate() [][]GameMapPosition {
 			fmt.Printf("ahongo:%d x:%d,y:%d,z%d, opened:%d\n", i, x, y, xy.high[y][x], len(*zone))
 		}
 	}
+	return zones
+}
+
+//各タイルを検証していって、ゾーニングする
+func (xy *xymap) zoningForMakeSwamp() [][]GameMapPosition {
+	zones := [][]GameMapPosition{}
+	totalOpened := []GameMapPosition{}
+	i := 0
+	for y := 0; y < xy.mapSize.MaxY; y++ {
+		for x := 0; x < xy.mapSize.MaxX; x++ {
+			alreadyOpened := false
+			for _, pos := range totalOpened {
+				if pos.X == x && pos.Y == y {
+					//すでにオープンしていた
+					alreadyOpened = true
+				}
+			}
+			if alreadyOpened {
+				continue
+			}
+			opened := &[]GameMapPosition{}
+			zone := xy.getNearHeightPanelsSame(x, y, opened)
+			//			fmt.Printf("\nlen%d",len(zone))
+			if len(*zone) == 0 {
+				continue
+			}
+			totalOpened = append(totalOpened, *opened...)
+
+			zones = append(zones, []GameMapPosition{})
+			zones[i] = append(zones[i], *zone...)
+
+			totalOpened = append(totalOpened, *zone...)
+			i++
+			fmt.Printf("ahongo:%d x:%d,y:%d,z%d, opened:%d\n", i, x, y, xy.high[y][x], len(*zone))
+		}
+	}
 
 	return zones
 }
 
+//x,yを含むつながっている同じ高さの領域を返す
+func (xy *xymap) getNearHeightPanelsSame(x int, y int, opened *[]GameMapPosition) *[]GameMapPosition {
+	return xy.openNearPanelSame(x, y, opened)
+}
 
+//上下左右のパネルをオープンし、同一高さなら返す
+//x, y, openedはすでにオープンした累積
+func (xy *xymap) openNearPanelSame(x int, y int, opened *[]GameMapPosition) *[]GameMapPosition {
+	currentHight := xy.high[y][x]
+	fmt.Printf("open x:%d, y:%d, z:%d\n", x, y, currentHight);
 
+	if (xy.shouldOpenToSame(currentHight, x, y, *opened)) {
+		*opened = append(*opened, GameMapPosition{X:x, Y:y, Z:currentHight})
+		fmt.Printf("opened1:%d\n", len(*opened));
+	}
+	if (xy.shouldOpenToSame(currentHight, x, y - 1, *opened)) {
+		opens := xy.openNearPanelSame(x, y - 1, opened)
+		*opened = append(*opened, *opens...)
+		fmt.Printf("opened20:%d\n", len(*opened));
+		trim(opened)
+		fmt.Printf("opened2 :%d\n", len(*opened));
+	}
+	if (xy.shouldOpenToSame(currentHight, x, y + 1, *opened)) {
+		opens := xy.openNearPanelSame(x, y + 1, opened)
+		*opened = append(*opened, *opens...)
+		trim(opened)
+		fmt.Printf("opened3:%d\n", len(*opened));
+	}
+	if (xy.shouldOpenToSame(currentHight, x - 1, y, *opened)) {
+		opens := xy.openNearPanelSame(x - 1, y, opened)
+		*opened = append(*opened, *opens...)
+		trim(opened)
+		fmt.Printf("opened4:%d\n", len(*opened));
+	}
+	if (xy.shouldOpenToSame(currentHight, x + 1, y, *opened)) {
+		opens := xy.openNearPanelSame(x + 1, y, opened)
+		*opened = append(*opened, *opens...)
+		trim(opened)
+		fmt.Printf("opened5:%d\n", len(*opened));
+	}
+	fmt.Printf("close x:%d, y:%d, z:%d\n", x, y, currentHight);
+	//	trim(opened);
+	return opened
+}
+
+//openすべきならtrue
+func (xy *xymap) shouldOpenToSame(currentHigh int, x int, y int, opened []GameMapPosition) bool {
+	if (x >= xy.mapSize.MaxX || y >= xy.mapSize.MaxY || x < 0 || y < 0) {
+		//マップ領域外
+		return false;
+	}
+	if (xy.high[y][x] != currentHigh) {
+		//高さ的にアウト
+		return false;
+	}
+	for _, pos := range opened {
+		if pos.X == x && pos.Y == y {
+			//すでにオープンしていた
+			fmt.Printf("alreadyed x:%d, y:%d\n", x, y);
+			return false;
+		}
+	}
+	return true;
+}
 
 
 

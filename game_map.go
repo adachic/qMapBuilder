@@ -66,7 +66,13 @@ const (
 	MacroMapTypeRoad = 1 + iota
 	MacroMapTypeRough
 	MacroMapTypeWall
-	MacroMapTypeCantEnter //進入不可地形
+	MacroMapTypeCantEnter //進入不可地形 TODO:これつかってんだっけ？
+
+	MacroMapTypeSwampWater //水系
+	MacroMapTypeSwampRava
+	MacroMapTypeSwampPoison
+	MacroMapTypeSwampHeal
+
 	MacroMapTypeOther //他
 	MacroMapTypeAllyPoint
 	MacroMapTypeEnemyPoint
@@ -192,10 +198,11 @@ func (game_map *GameMap) init(condition GameMapCondition) *GameMap {
 		//勾配を生成
 		xymap.makeGradient(game_map.Geographical)
 
-		//水、毒沼配置
-
 		//バリデーション
 		xymap.validate()
+
+		//水、毒沼配置
+		xymap.makeSwamp(game_map.Geographical)
 
 		//alloc/init
 		game_map.allocToJungleGym()
@@ -322,7 +329,7 @@ func (game_map *GameMap) initMapGeographical() {
 			geo = GeographicalJozen
 		}
 	case CategoryFire:
-		geo =  GeographicalFire
+		geo = GeographicalFire
 	case CategoryCave:
 		geo = GeographicalCave
 	case CategoryRemains:
@@ -481,6 +488,7 @@ func (game_map *GameMap) bindToGameParts(gamePartsDict map[string]GameParts) boo
 	idsRoadHalf := GetIdsRoad(game_map, gamePartsDict, true)
 	idsRoughHalf := GetIdsRough(game_map, gamePartsDict, true)
 	idsWallHalf := GetIdsWall(game_map, gamePartsDict, true)
+
 	if (len(idsRoadHalf) == 0 || len(idsRoughHalf) == 0 || len(idsWallHalf) == 0) {
 		if (len(idsRoadHalf) == 0) {
 			if (len(idsRoughHalf) != 0) {
@@ -879,4 +887,20 @@ func (game_map *GameMap) shouldLightening(x int, y int, z int) bool {
 	return true
 }
 
+
+//地形に適さないパーツ判定、除外ならtrue
+func (game_map *GameMap)isExcludedByGeography(parts GameParts) bool {
+	switch game_map.Geographical {
+	case GeographicalStep:
+		if parts.Snow > 0 {
+			return true
+		}
+	case GeographicalSnow:
+		if parts.Snow == 0 {
+			return true
+		}
+	}
+
+	return false
+}
 
