@@ -11,12 +11,16 @@ import (
 
 type Category int
 const (
-	CategoryStep     Category = 14
-	CategoryMountain Category = 9
-	CategoryCave     Category = 8
-	CategoryShrine   Category = 7
-	CategoryTown     Category = 6
-	CategoryCastle   Category = 5
+	CategoryStep      Category = 14
+	CategoryCave      Category = 12
+	CategoryRemains   Category = 13
+
+	CategoryPoison 	 Category = 9
+	CategoryFire 	 Category = 10
+	CategorySnow	 Category = 11
+
+	CategoryJozen     Category = 8
+	CategoryCastle   Category = 7
 )
 
 type StructureType int

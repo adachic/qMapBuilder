@@ -250,18 +250,23 @@ func (game_map *GameMap) initMapCategory() {
 	lot := lottery.New(rand.New(rand.NewSource(time.Now().UnixNano())))
 	categories := []lottery.Interface{
 		CategoryStep,
-		CategoryMountain,
 		CategoryCave,
-		CategoryShrine,
-		CategoryTown,
+		CategoryRemains,
+
+		CategoryFire,
+		CategoryPoison,
+		CategorySnow,
+
+		CategoryPoison,
 		CategoryCastle,
 	}
 	result := lot.Lots(
 		categories...,
 	)
 	game_map.Category = categories[result].(Category)
+
 	switch(game_map.Category){
-	case CategoryTown:
+	case CategoryJozen:
 		game_map.Category = CategoryStep
 	}
 }

@@ -319,7 +319,7 @@ func (xy *xymap) printMapForDebug() {
 		}
 		fmt.Print("   ")
 		for x := 0; x < xy.mapSize.MaxX; x++ {
-			fmt.Printf("%2d",xy.high[y][x])
+			fmt.Printf("%2d", xy.high[y][x])
 		}
 		fmt.Print("\n")
 	}
@@ -421,55 +421,55 @@ func (xy *xymap) getNearHeightPanels(x int, y int, opened *[]GameMapPosition) *[
 //x, y, openedはすでにオープンした累積
 func (xy *xymap) openNearPanel(x int, y int, opened *[]GameMapPosition) *[]GameMapPosition {
 	currentHight := xy.high[y][x]
-	fmt.Printf("open x:%d, y:%d, z:%d\n",x,y,currentHight);
+	fmt.Printf("open x:%d, y:%d, z:%d\n", x, y, currentHight);
 
 	if (xy.shouldOpen(currentHight, x, y, *opened)) {
 		*opened = append(*opened, GameMapPosition{X:x, Y:y, Z:currentHight})
-		fmt.Printf("opened1:%d\n",len(*opened));
+		fmt.Printf("opened1:%d\n", len(*opened));
 	}
 	if (xy.shouldOpen(currentHight, x, y - 1, *opened)) {
 		opens := xy.openNearPanel(x, y - 1, opened)
 		*opened = append(*opened, *opens...)
-		fmt.Printf("opened20:%d\n",len(*opened));
+		fmt.Printf("opened20:%d\n", len(*opened));
 		trim(opened)
-		fmt.Printf("opened2 :%d\n",len(*opened));
+		fmt.Printf("opened2 :%d\n", len(*opened));
 	}
 	if (xy.shouldOpen(currentHight, x, y + 1, *opened)) {
 		opens := xy.openNearPanel(x, y + 1, opened)
 		*opened = append(*opened, *opens...)
 		trim(opened)
-		fmt.Printf("opened3:%d\n",len(*opened));
+		fmt.Printf("opened3:%d\n", len(*opened));
 	}
 	if (xy.shouldOpen(currentHight, x - 1, y, *opened)) {
 		opens := xy.openNearPanel(x - 1, y, opened)
 		*opened = append(*opened, *opens...)
 		trim(opened)
-		fmt.Printf("opened4:%d\n",len(*opened));
+		fmt.Printf("opened4:%d\n", len(*opened));
 	}
 	if (xy.shouldOpen(currentHight, x + 1, y, *opened)) {
 		opens := xy.openNearPanel(x + 1, y, opened)
 		*opened = append(*opened, *opens...)
 		trim(opened)
-		fmt.Printf("opened5:%d\n",len(*opened));
+		fmt.Printf("opened5:%d\n", len(*opened));
 	}
-	fmt.Printf("close x:%d, y:%d, z:%d\n",x,y,currentHight);
-//	trim(opened);
+	fmt.Printf("close x:%d, y:%d, z:%d\n", x, y, currentHight);
+	//	trim(opened);
 	return opened
 }
 
-func trim(opened *[]GameMapPosition){
+func trim(opened *[]GameMapPosition) {
 	newOpenArray := []GameMapPosition{}
 	newOpened := map[string]GameMapPosition{}
 	for _, pos := range *opened {
 		key := pos.X + pos.Y * 100 + pos.Z * 10000
 		newOpened[strconv.Itoa(key)] = GameMapPosition{}
 	}
-	for key, _:= range newOpened {
-		val , _ := strconv.Atoi(key)
-		z := val/ 10000
-		y := (val% 10000)/ 100
-		x := val% 100
-		newOpenArray = append(newOpenArray, GameMapPosition{X:x,Y:y,Z:z})
+	for key, _ := range newOpened {
+		val, _ := strconv.Atoi(key)
+		z := val / 10000
+		y := (val % 10000) / 100
+		x := val % 100
+		newOpenArray = append(newOpenArray, GameMapPosition{X:x, Y:y, Z:z})
 	}
 	*opened = newOpenArray
 	return;
@@ -488,7 +488,7 @@ func (xy *xymap) shouldOpen(currentHigh int, x int, y int, opened []GameMapPosit
 	for _, pos := range opened {
 		if pos.X == x && pos.Y == y {
 			//すでにオープンしていた
-			fmt.Printf("alreadyed x:%d, y:%d\n",x,y);
+			fmt.Printf("alreadyed x:%d, y:%d\n", x, y);
 			return false;
 		}
 	}
@@ -497,10 +497,214 @@ func (xy *xymap) shouldOpen(currentHigh int, x int, y int, opened []GameMapPosit
 
 //通れない/ハマり地形を正す
 func (xy *xymap) validate() {
-	//各タイルを検証していって、ゾーニングする
-	totalOpened := []GameMapPosition{}
-	zones := [][]GameMapPosition{}
 
+	retry:
+
+	//ゾーニング
+	zones := xy.zoningForValidate()
+	for _, val := range zones {
+		fmt.Printf("ahongoF:%d \n", len(val))
+	}
+
+	done := true
+	//隣り合うゾーンとつなげる
+	for idx, zone := range zones {
+		for idx2, neighboughZone := range zones {
+			if (idx == idx2) {
+				continue
+			}
+			isNeighbough, zone1edge, zone2edge := xy.isNeighbough(zone, neighboughZone)
+			if (!isNeighbough) {
+				continue
+			}
+			//階段でつなげる
+			done1 := xy.addStirsBetweenZones(zone, neighboughZone, zone1edge, zone2edge)
+			if !done1 {
+				done = false
+			}
+		}
+	}
+	if (!done){
+		goto retry;
+	}
+	fmt.Printf("unko50000")
+}
+
+//zone1,zone2が隣り合っていればtrue,
+//zone1の隣り合っている座標を返す
+//zone2の隣り合っている座標を返す
+func (xy *xymap) isNeighbough(zone1 []GameMapPosition, zone2 []GameMapPosition) (bool, GameMapPosition, GameMapPosition) {
+	matrix := make([][]int, xy.mapSize.MaxY)
+	for y := 0; y < xy.mapSize.MaxY; y++ {
+		matrix[y] = make([]int, xy.mapSize.MaxX)
+	}
+	for x := 0; x < xy.mapSize.MaxX; x++ {
+		for y := 0; y < xy.mapSize.MaxY; y++ {
+			matrix[y][x] = 0
+		}
+	}
+	for _, pos := range zone1 {
+		matrix[pos.Y][pos.X] = 1
+	}
+	for _, pos := range zone2 {
+		matrix[pos.Y][pos.X] = 2
+	}
+	beforeId := 0
+	beforePos := GameMapPosition{}
+	for x := 0; x < xy.mapSize.MaxX; x++ {
+		beforeId = 0
+		for y := 0; y < xy.mapSize.MaxY; y++ {
+			if (beforeId == 2 && matrix[y][x] == 1) {
+				return true, GameMapPosition{X:x, Y:y}, beforePos
+			}
+			if (beforeId == 1 && matrix[y][x] == 2) {
+				return true, beforePos, GameMapPosition{X:x, Y:y}
+			}
+			beforeId = matrix[y][x]
+			beforePos = GameMapPosition{X:x, Y:y}
+		}
+	}
+	beforeId = 0
+	beforePos = GameMapPosition{}
+	for y := 0; y < xy.mapSize.MaxY; y++ {
+		beforeId = 0
+		for x := 0; x < xy.mapSize.MaxX; x++ {
+			if (beforeId == 2 && matrix[y][x] == 1) {
+				return true, GameMapPosition{X:x, Y:y}, beforePos
+			}
+			if (beforeId == 1 && matrix[y][x] == 2) {
+				return true, beforePos, GameMapPosition{X:x, Y:y}
+			}
+			beforeId = matrix[y][x]
+			beforePos = GameMapPosition{X:x, Y:y}
+		}
+	}
+	return false, GameMapPosition{}, GameMapPosition{}
+}
+
+//zone1,zone2を階段でつなげる
+//無事全てをつなぎ終えたらtrue
+func (xy *xymap) addStirsBetweenZones(zone1 []GameMapPosition, zone2 []GameMapPosition,
+zone1edge GameMapPosition, zone2edge GameMapPosition) bool{
+	fmt.Printf("edge1:%+v edge2:%+v", zone1edge, zone2edge)
+
+	beginingHeight := 0
+
+	//低い土地を盛り上げる
+	zone1high := xy.high[zone1edge.Y][zone1edge.X]
+	zone2high := xy.high[zone2edge.Y][zone2edge.X]
+	replaceForZone := []GameMapPosition{}
+	replaceForEdge := GameMapPosition{}
+	if (zone1high > zone2high) {
+		replaceForZone = zone2
+		replaceForEdge = zone2edge
+		beginingHeight = zone1high
+	}else {
+		replaceForZone = zone1
+		replaceForEdge = zone1edge
+		beginingHeight = zone2high
+	}
+	//直線的にいく、その過程でぶつかれば曲げる
+
+	//直線の幅は1-3のランダム(zone面積に応じて比例)
+	pipeWidth := int(len(replaceForZone)) / 20 + 1
+	if (pipeWidth > 3) {
+		pipeWidth = 3
+	}
+
+	type Direction int
+	const (
+		DirectionLeft = 1 + iota
+		DirectionRight
+		DirectionUp
+		DirectionDown
+	)
+
+	//方向
+	var toDirection Direction
+	if (zone1edge.X > zone2edge.X) {
+		if (zone1high > zone2high) {
+			toDirection = DirectionLeft
+		}else {
+			toDirection = DirectionRight
+		}
+	}else if (zone1edge.X < zone2edge.X) {
+		if (zone1high > zone2high) {
+			toDirection = DirectionRight
+		}else {
+			toDirection = DirectionLeft
+		}
+	}else if (zone1edge.Y > zone2edge.Y) {
+		if (zone1high > zone2high) {
+			toDirection = DirectionDown
+		}else {
+			toDirection = DirectionUp
+		}
+	}else if (zone1edge.Y < zone2edge.Y) {
+		if (zone1high > zone2high) {
+			toDirection = DirectionUp
+		}else {
+			toDirection = DirectionDown
+		}
+	}
+
+	proceed := 0
+	doneConnected := false
+	for {
+		nextX := 0
+		nextY := 0
+		switch toDirection {
+		case DirectionLeft:
+			nextX = replaceForEdge.X - proceed
+			nextY = replaceForEdge.Y
+		case DirectionRight:
+			nextX = replaceForEdge.X + proceed
+			nextY = replaceForEdge.Y
+		case DirectionUp:
+			nextX = replaceForEdge.X
+			nextY = replaceForEdge.Y + proceed
+		case DirectionDown:
+			nextX = replaceForEdge.X + proceed
+			nextY = replaceForEdge.Y
+		}
+		replaceToHeight := beginingHeight - proceed - 1
+		if(!containsInZone(nextX, nextY, replaceForZone)){
+			//行き詰った
+			break;
+		}
+		if(xy.high[nextY][nextX] == replaceToHeight){
+			//つなぎ終えた
+			doneConnected = true
+			break
+		}
+		if (replaceToHeight < 1){
+			//行き詰った
+			break;
+		}
+		xy.high[nextY][nextX] = replaceToHeight
+		if(doneConnected){
+			break
+		}
+		proceed++
+	}
+
+	return doneConnected
+}
+
+//zoneにx,yが含まれていればtrue
+func containsInZone(x int, y int, zone []GameMapPosition) bool {
+	for _, pos := range zone {
+		if pos.X == x && pos.Y == y {
+			return true
+		}
+	}
+	return false
+}
+
+//各タイルを検証していって、ゾーニングする
+func (xy *xymap) zoningForValidate() [][]GameMapPosition {
+	zones := [][]GameMapPosition{}
+	totalOpened := []GameMapPosition{}
 	i := 0
 	for y := 0; y < xy.mapSize.MaxY; y++ {
 		for x := 0; x < xy.mapSize.MaxX; x++ {
@@ -516,7 +720,7 @@ func (xy *xymap) validate() {
 			}
 			opened := &[]GameMapPosition{}
 			zone := xy.getNearHeightPanels(x, y, opened)
-//			fmt.Printf("\nlen%d",len(zone))
+			//			fmt.Printf("\nlen%d",len(zone))
 			if len(*zone) == 0 {
 				continue
 			}
@@ -530,9 +734,9 @@ func (xy *xymap) validate() {
 			fmt.Printf("ahongo:%d x:%d,y:%d,z%d, opened:%d\n", i, x, y, xy.high[y][x], len(*zone))
 		}
 	}
-	fmt.Printf("unko50000")
-}
 
+	return zones
+}
 
 
 
