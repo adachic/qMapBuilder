@@ -335,30 +335,31 @@ func (xy *xymap) makeGradient(geo Geographical) {
 	coefficient := 3
 	switch geo {
 	case GeographicalStep:
-		base := lottery.GetRandomInt(1,3)
+		base := lottery.GetRandomInt(1, 3)
 		rowestHigh = base * coefficient
 		break
 	case GeographicalCave:
 		rowestHigh = 10 * coefficient
 		break
 	case GeographicalRemain:
-		base := lottery.GetRandomInt(1,5)
+		base := lottery.GetRandomInt(1, 5)
 		rowestHigh = base * coefficient
 		break
 
 	case GeographicalPoison:
-		base := lottery.GetRandomInt(1,4)
+		base := lottery.GetRandomInt(1, 4)
 		rowestHigh = base * coefficient
 		break
 	case GeographicalFire:
 		rowestHigh = 4 * coefficient
 		break
+	case GeographicalSnow:
+		base := lottery.GetRandomInt(1, 3)
+		rowestHigh = base * coefficient
+		break
+
 	case GeographicalJozen:
 		rowestHigh = 2 * coefficient
-		break
-	case GeographicalSnow:
-		base := lottery.GetRandomInt(1,3)
-		rowestHigh = base * coefficient
 		break
 	case GeographicalCastle:
 		rowestHigh = 2 * coefficient
@@ -532,7 +533,7 @@ func (xy *xymap) validate() {
 			}
 		}
 	}
-	if (!done){
+	if (!done) {
 		goto retry;
 	}
 	fmt.Printf("unko50000")
@@ -593,7 +594,7 @@ func (xy *xymap) isNeighbough(zone1 []GameMapPosition, zone2 []GameMapPosition) 
 //zone1,zone2を階段でつなげる
 //無事全てをつなぎ終えたらtrue
 func (xy *xymap) addStirsBetweenZones(zone1 []GameMapPosition, zone2 []GameMapPosition,
-zone1edge GameMapPosition, zone2edge GameMapPosition) bool{
+zone1edge GameMapPosition, zone2edge GameMapPosition) bool {
 	fmt.Printf("edge1:%+v edge2:%+v", zone1edge, zone2edge)
 
 	beginingHeight := 0
@@ -676,21 +677,21 @@ zone1edge GameMapPosition, zone2edge GameMapPosition) bool{
 			nextY = replaceForEdge.Y
 		}
 		replaceToHeight := beginingHeight - proceed - 1
-		if(!containsInZone(nextX, nextY, replaceForZone)){
+		if (!containsInZone(nextX, nextY, replaceForZone)) {
 			//行き詰った
 			break;
 		}
-		if(xy.high[nextY][nextX] == replaceToHeight){
+		if (xy.high[nextY][nextX] == replaceToHeight) {
 			//つなぎ終えた
 			doneConnected = true
 			break
 		}
-		if (replaceToHeight < 1){
+		if (replaceToHeight < 1) {
 			//行き詰った
 			break;
 		}
 		xy.high[nextY][nextX] = replaceToHeight
-		if(doneConnected){
+		if (doneConnected) {
 			break
 		}
 		proceed++
