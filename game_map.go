@@ -49,11 +49,14 @@ const (
 type Geographical int
 const (
 	GeographicalStep     Geographical = 14 + 10
-	GeographicalMountain Geographical = 9 + 10
 	GeographicalCave     Geographical = 8 + 10
-	GeographicalFort     Geographical = 7 + 10
-	GeographicalShrine   Geographical = 6 + 10
-	GeographicalTown     Geographical = 5 + 10
+	GeographicalRemain     Geographical = 7 + 10
+
+	GeographicalPoison  Geographical = 6 + 10
+	GeographicalFire     Geographical = 9 + 10
+	GeographicalSnow     Geographical = 5 + 10
+
+	GeographicalJozen  Geographical = 3 + 10
 	GeographicalCastle   Geographical = 4 + 10
 )
 
@@ -257,7 +260,7 @@ func (game_map *GameMap) initMapCategory() {
 		CategoryPoison,
 		CategorySnow,
 
-		CategoryPoison,
+		CategoryJozen,
 		CategoryCastle,
 	}
 	result := lot.Lots(
@@ -266,6 +269,12 @@ func (game_map *GameMap) initMapCategory() {
 	game_map.Category = categories[result].(Category)
 
 	switch(game_map.Category){
+	case CategoryPoison:
+		fallthrough
+	case CategoryFire:
+		fallthrough
+	case CategorySnow:
+		fallthrough
 	case CategoryJozen:
 		game_map.Category = CategoryStep
 	}
@@ -297,20 +306,42 @@ func (game_map *GameMap) initMapSize() {
 
 //地形の抽選結果を返す
 func (game_map *GameMap) initMapGeographical() {
-	lot := lottery.New(rand.New(rand.NewSource(time.Now().UnixNano())))
-	geographicals := []lottery.Interface{
-		GeographicalStep,
-		GeographicalMountain,
-		GeographicalCave,
-		GeographicalFort,
-		GeographicalShrine,
-		GeographicalTown,
-		GeographicalCastle,
+	//カテゴリに応じて、地形を対応させる
+	var geo Geographical
+	switch game_map.Category {
+	case CategoryStep:
+		dice := lottery.GetRandomInt(0, 3)
+		switch dice{
+		case 0:
+			geo = GeographicalStep
+		case 1:
+			geo = GeographicalPoison
+		case 2:
+			geo = GeographicalSnow
+		case 3:
+			geo = GeographicalJozen
+		}
+	case CategoryFire:
+		geo =  GeographicalFire
+	case CategoryCave:
+		geo = GeographicalCave
+	case CategoryRemains:
+		geo = GeographicalRemain
+	case CategoryJozen:
+		geo = GeographicalJozen
+	case CategorySnow:
+		geo = GeographicalSnow
+	case CategoryCastle:
+		geo = GeographicalCastle
 	}
-	result := lot.Lots(
-		geographicals...,
-	)
-	game_map.Geographical = geographicals[result].(Geographical)
+
+	/*
+	GeographicalPoison
+	GeographicalSnow
+	GeographicalJozen
+	GeographicalFire
+	*/
+	game_map.Geographical = geo
 }
 
 //味方の出撃座標を返す
@@ -333,7 +364,7 @@ func (game_map *GameMap) initAllyStartPoint() {
 	}
 	fmt.Print("seed", seed.Min, " ", seed.Max)
 	distanceFrom := lottery.GetRandomInt(seed.Min, seed.Max)
-	game_map.AllyStartPoint , _= CreateRandomPositionInMap(
+	game_map.AllyStartPoint, _ = CreateRandomPositionInMap(
 		game_map.Size,
 		GameMapPosition{game_map.Size.MaxX / 2, game_map.Size.MaxY / 2, 0},
 		distanceFrom)
@@ -754,9 +785,9 @@ type JsonGameMap struct {
 func (game_map *GameMap) createJson(gamePartsDict map[string]GameParts) {
 	fmt.Printf("==output json==\n")
 
-	game_map.AllyStartPoint.Z = game_map.High[game_map.AllyStartPoint.Y][game_map.AllyStartPoint.X]/2 // - 1
+	game_map.AllyStartPoint.Z = game_map.High[game_map.AllyStartPoint.Y][game_map.AllyStartPoint.X] / 2 // - 1
 	for i, enemyStartPoint := range game_map.EnemyStartPoints { // キーは使われません
-		game_map.EnemyStartPoints[i].Z = game_map.High[game_map.EnemyStartPoints[i].Y][game_map.EnemyStartPoints[i].X]/2  //- 1
+		game_map.EnemyStartPoints[i].Z = game_map.High[game_map.EnemyStartPoints[i].Y][game_map.EnemyStartPoints[i].X] / 2  //- 1
 		fmt.Printf("enemyStartPoint: %+v\n", enemyStartPoint)
 	}
 
@@ -791,7 +822,7 @@ func (game_map *GameMap) createJson(gamePartsDict map[string]GameParts) {
 					//肉抜き
 					continue
 				}
-				jsonStub.JungleGym = append(jsonStub.JungleGym, JsonPanel{X:x, Y:y, Z:z/2, Id:cube.Id})
+				jsonStub.JungleGym = append(jsonStub.JungleGym, JsonPanel{X:x, Y:y, Z:z / 2, Id:cube.Id})
 				_, ok := flags[cube.Id]
 				if (!ok) {
 					jsonStub.GameParts = append(jsonStub.GameParts, cube)

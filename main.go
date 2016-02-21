@@ -36,7 +36,7 @@ func flow(condition GameMapCondition) {
 		fmt.Println("====dame===")
 		return;
 	}
-	fmt.Println("====drawMap====")
+	fmt.Println("====drawMap====:geographical:",game_map.Geographical)
 
 	//png生成
 	game_map.createPng(gamePartsDict)
@@ -47,7 +47,7 @@ func flow(condition GameMapCondition) {
 
 //雑に100回まわしてみる
 func bulc(condition GameMapCondition) {
-	x := 100
+	x := 1
 	wt := sync.WaitGroup{}
 	for x > 0 {
 		x--

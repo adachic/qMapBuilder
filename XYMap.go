@@ -335,25 +335,33 @@ func (xy *xymap) makeGradient(geo Geographical) {
 	coefficient := 3
 	switch geo {
 	case GeographicalStep:
-		rowestHigh = 3 * coefficient
-		break
-	case GeographicalMountain:
-		rowestHigh = 10 * coefficient
+		base := lottery.GetRandomInt(1,3)
+		rowestHigh = base * coefficient
 		break
 	case GeographicalCave:
-		rowestHigh = 8 * coefficient
+		rowestHigh = 10 * coefficient
 		break
-	case GeographicalFort:
-		rowestHigh = 5 * coefficient
+	case GeographicalRemain:
+		base := lottery.GetRandomInt(1,5)
+		rowestHigh = base * coefficient
 		break
-	case GeographicalShrine:
-		rowestHigh = 5 * coefficient
+
+	case GeographicalPoison:
+		base := lottery.GetRandomInt(1,4)
+		rowestHigh = base * coefficient
 		break
-	case GeographicalTown:
+	case GeographicalFire:
 		rowestHigh = 4 * coefficient
+		break
+	case GeographicalJozen:
+		rowestHigh = 2 * coefficient
+		break
+	case GeographicalSnow:
+		base := lottery.GetRandomInt(1,3)
+		rowestHigh = base * coefficient
 		break
 	case GeographicalCastle:
-		rowestHigh = 4 * coefficient
+		rowestHigh = 2 * coefficient
 		break
 	}
 

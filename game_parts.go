@@ -12,19 +12,18 @@ import (
 type Category int
 const (
 	CategoryStep      Category = 14
-	CategoryCave      Category = 12
-	CategoryRemains   Category = 13
+	CategoryCave      Category = 8
+	CategoryRemains   Category = 7
+	CategoryFire 	 Category = 9
+	CategoryCastle   Category = 5
 
-	CategoryPoison 	 Category = 9
-	CategoryFire 	 Category = 10
-	CategorySnow	 Category = 11
-
-	CategoryJozen     Category = 8
-	CategoryCastle   Category = 7
+	CategoryPoison 	 Category = 15
+	CategorySnow	 Category = 16
+	CategoryJozen     Category = 17
 )
 
-type StructureType int
 
+type StructureType int
 const (
 	StructureTypeRoad StructureType = iota
 	StructureTypeWall
