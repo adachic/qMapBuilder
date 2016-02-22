@@ -468,6 +468,7 @@ func (game_map *GameMap) copyFromXY(xy *xymap) {
 			macro := xy.getMatrix(x, y);
 			high := xy.getHigh(x, y);
 			game_map.High[y][x] = high;
+			fmt.Printf("crash x:%d y:%d high%d, lenz:%d",x,y,high, len(game_map.MacroMapTypes))
 			for z := 0; z < high; z++ {
 				game_map.MacroMapTypes[z][y][x] = macro;
 			}
@@ -488,6 +489,8 @@ func (game_map *GameMap) bindToGameParts(gamePartsDict map[string]GameParts) boo
 	idsRoadHalf := GetIdsRoad(game_map, gamePartsDict, true)
 	idsRoughHalf := GetIdsRough(game_map, gamePartsDict, true)
 	idsWallHalf := GetIdsWall(game_map, gamePartsDict, true)
+
+	idsWaterHalf := GetIdsWater(game_map, gamePartsDict, true)
 
 	if (len(idsRoadHalf) == 0 || len(idsRoughHalf) == 0 || len(idsWallHalf) == 0) {
 		if (len(idsRoadHalf) == 0) {
@@ -553,10 +556,18 @@ func (game_map *GameMap) bindToGameParts(gamePartsDict map[string]GameParts) boo
 				parts := GetGamePartsSurface(idsWallFull, idsRoughFull, idsRoadFull, gamePartsDict, macro, x, y, z);
 				fmt.Printf("surface: %2d,%2d,%2d id:%s macro[%v]\n", z, y, x, parts.Id, macro)
 				if (shouldHalf) {
-					//halfにコンバートする
-					before := parts.Id
-					parts = GetHalfParts(idsRoadHalf, idsRoughHalf, idsWallHalf, parts, gamePartsDict, macro, x, y, z)
-					fmt.Printf("converted from %s to %s \n", before, parts.Id)
+					if (macro == MacroMapTypeSwampWater ||
+					macro == MacroMapTypeSwampRava ||
+					macro == MacroMapTypeSwampPoison ||
+					macro == MacroMapTypeSwampHeal) {
+						fmt.Print("unko3000")
+						parts = GetGamePartsWater(idsWaterHalf, gamePartsDict, macro, x, y, z)
+					}else {
+						//halfにコンバートする
+						before := parts.Id
+						parts = GetHalfParts(idsRoadHalf, idsRoughHalf, idsWallHalf, parts, gamePartsDict, macro, x, y, z)
+						fmt.Printf("converted from %s to %s \n", before, parts.Id)
+					}
 				}
 				game_map.JungleGym[z][y][x] = parts;
 			}

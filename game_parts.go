@@ -14,11 +14,11 @@ const (
 	CategoryStep      Category = 14
 	CategoryCave      Category = 8
 	CategoryRemains   Category = 7
-	CategoryFire 	 Category = 9
+	CategoryFire     Category = 9
 	CategoryCastle   Category = 5
 
-	CategoryPoison 	 Category = 15
-	CategorySnow	 Category = 16
+	CategoryPoison     Category = 15
+	CategorySnow     Category = 16
 	CategoryJozen     Category = 17
 )
 
@@ -102,6 +102,26 @@ func CreateGamePartsDict(filePath string) map[string]GameParts {
 	return partsDict
 }
 
+
+//gamePartsがmapに適応するならtrue
+func IsIncludedWaterType(game_map GameMap, gameParts GameParts) bool {
+	switch game_map.Geographical{
+	case GeographicalCave     :
+		if gameParts.WaterType == WaterTypeFlame {
+			return true
+		}
+	case GeographicalPoison  :
+		if gameParts.WaterType == WaterTypePoison {
+			return true
+		}
+	default:
+		if gameParts.WaterType == WaterTypeWater {
+			return true
+		}
+	}
+	return false
+}
+
 //gamePartsがmacroMapTypeを含むならtrue
 func IsIncludedMacroType(gameParts GameParts, tgt MacroMapType) bool {
 	for _, value := range gameParts.MacroTypes {
@@ -139,7 +159,7 @@ func GetIdsRoad(game_map *GameMap, gamePartsDict map[string]GameParts, half bool
 			//			fmt.Printf("unko%+v, %+v\n", parts.Category ,game_map.Category)
 			continue
 		}
-		if (game_map.isExcludedByGeography(parts)){
+		if (game_map.isExcludedByGeography(parts)) {
 			continue
 		}
 		if (!IsIncludedMacroType(parts, MacroMapTypeRoad)) {
@@ -175,7 +195,7 @@ func GetIdsRough(game_map *GameMap, gamePartsDict map[string]GameParts, half boo
 		if (parts.Category != game_map.Category) {
 			continue
 		}
-		if (game_map.isExcludedByGeography(parts)){
+		if (game_map.isExcludedByGeography(parts)) {
 			continue
 		}
 		if (!IsIncludedMacroType(parts, MacroMapTypeRough)) {
@@ -208,7 +228,7 @@ func GetIdsWall(game_map *GameMap, gamePartsDict map[string]GameParts, half bool
 		if (parts.Category != game_map.Category) {
 			continue
 		}
-		if (game_map.isExcludedByGeography(parts)){
+		if (game_map.isExcludedByGeography(parts)) {
 			continue
 		}
 		if (!IsIncludedMacroType(parts, MacroMapTypeWall)) {
@@ -228,6 +248,33 @@ func GetIdsWall(game_map *GameMap, gamePartsDict map[string]GameParts, half bool
 	}
 	fmt.Printf("idsWall:%+v\n", idsWall)
 	return idsWall
+}
+
+//主幹となる水の種類を決定し、id群を返す
+func GetIdsWater(game_map *GameMap, gamePartsDict map[string]GameParts, half bool) []int {
+	var partsWaters Roads
+	var idsParts []int
+
+	//カテゴリ集合体
+	for _, parts := range gamePartsDict {
+		if (parts.Category != game_map.Category) {
+			continue
+		}
+		if (parts.Harf != half) {
+			continue
+		}
+		if (!IsIncludedWaterType(*game_map, parts)) {
+			continue
+		}
+		partsWaters = append(partsWaters, parts)
+	}
+
+	for _, parts := range partsWaters {
+		i, _ := strconv.Atoi(parts.Id)
+		idsParts = append(idsParts, i)
+	}
+	fmt.Printf("idsWarter:%+v\n", idsParts)
+	return idsParts
 }
 
 //表層(道,ラフ,壁)
@@ -269,25 +316,34 @@ gamePartsDict map[string]GameParts, macro MacroMapType, x int, y int, z int) Gam
 	return gamePartsDict[strconv.Itoa(id)]
 }
 
+//水を返す
+func GetGamePartsWater(idsWaterHarf []int,
+gamePartsDict map[string]GameParts, macro MacroMapType, x int, y int, z int) GameParts {
+	opensimplex.NewWithSeed(0);
+	idx := GetIdxWithEval3(x, y, z, idsWaterHarf)
+	id := idsWaterHarf[idx]
+	return gamePartsDict[strconv.Itoa(id)]
+}
+
 //partsのhalf相当を選択し、返す
 func GetHalfParts(idsRoad []int, idsRough []int, idsWall []int, srcParts GameParts,
 gamePartsDict map[string]GameParts, macro MacroMapType,
 x int, y int, z int) GameParts {
 	srcId, _ := strconv.Atoi(srcParts.Id)
 	for _, value := range idsRoad {
-		halfId , _ := strconv.Atoi(gamePartsDict[strconv.Itoa(value)].HarfId)
+		halfId, _ := strconv.Atoi(gamePartsDict[strconv.Itoa(value)].HarfId)
 		if (halfId == srcId) {
 			return gamePartsDict[strconv.Itoa(value)];
 		}
 	}
 	for _, value := range idsWall {
-		halfId , _ := strconv.Atoi(gamePartsDict[strconv.Itoa(value)].HarfId)
+		halfId, _ := strconv.Atoi(gamePartsDict[strconv.Itoa(value)].HarfId)
 		if (halfId == srcId) {
 			return gamePartsDict[strconv.Itoa(value)];
 		}
 	}
 	for _, value := range idsRough {
-		halfId , _ := strconv.Atoi(gamePartsDict[strconv.Itoa(value)].HarfId)
+		halfId, _ := strconv.Atoi(gamePartsDict[strconv.Itoa(value)].HarfId)
 		if (halfId == srcId) {
 			return gamePartsDict[strconv.Itoa(value)];
 		}

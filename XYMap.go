@@ -374,11 +374,11 @@ func (xy *xymap) putSwamp(targetZone []GameMapPosition, geo Geographical) {
 	switch geo {
 	case GeographicalStep:
 	case GeographicalCave:
-		swampType = MacroMapTypeSwampRava
 	case GeographicalSnow:
 	case GeographicalPoison:
 		swampType = MacroMapTypeSwampPoison
 	case GeographicalFire:
+		swampType = MacroMapTypeSwampRava
 	default:
 	}
 	for _, pos := range targetZone {
@@ -389,71 +389,71 @@ func (xy *xymap) putSwamp(targetZone []GameMapPosition, geo Geographical) {
 			continue
 		}
 		//エッジ部分には水置かない
-		if (xy.isEdgeInZone(targetZone, pos)) {
+		fmt.Print("unko2000")
+		if (isEdgeInZone(targetZone, pos)) {
 			continue
 		}
+		fmt.Print("unko2001")
 		xy.matrix[pos.Y][pos.X] = swampType
 	}
-
-	//harfを水に置き換える
-
-	//harfがなければ掘削
-
-	//掘削した場所に水を作る
 
 }
 
 //posはzoneの中のエッジ部分ならtrue
-func (xy *xymap)isEdgeInZone(zone []GameMapPosition, pos GameMapPosition) bool {
+func isEdgeInZone(zone []GameMapPosition, pos GameMapPosition) bool {
 	NotEdgeTop := false
 	NotEdgeBottom := false
 	NotEdgeRight := false
 	NotEdgeLeft := false
 
-	for _,  posInZone := range zone {
-		if posInZone.X == pos.X - 1{
+	for _, posInZone := range zone {
+		if ((posInZone.X == pos.X - 1) && (posInZone.Y == pos.Y)){
 			NotEdgeLeft = true
 		}
-		if posInZone.X == pos.X + 1{
+		if ((posInZone.X == pos.X + 1) && (posInZone.Y == pos.Y)){
 			NotEdgeRight = true
 		}
-		if posInZone.Y == pos.Y + 1{
+		if ((posInZone.Y == pos.Y + 1) && (posInZone.X == pos.X)){
 			NotEdgeTop = true
 		}
-		if posInZone.Y == pos.Y - 1{
+		if ((posInZone.Y == pos.Y - 1) && (posInZone.X == pos.X)){
 			NotEdgeBottom = true
 		}
 	}
 
-	return NotEdgeTop || NotEdgeBottom || NotEdgeRight || NotEdgeLeft
+	NotEdge := NotEdgeTop && NotEdgeBottom && NotEdgeRight && NotEdgeLeft
+	return !NotEdge
 }
 
 //zonesのなかから、池を張ってもいいくらいの大きさの広場を抽出する
 func trimZoneSizeForSwamp(zones [][]GameMapPosition, geo Geographical) [][]GameMapPosition {
 	filtered := [][]GameMapPosition{}
-	sizeToFilter := 0
-	switch geo {
-	case GeographicalStep:
-		sizeToFilter = 4
-	case GeographicalCave:
-		sizeToFilter = 2
-	case GeographicalSnow:
-		sizeToFilter = 4
-	case GeographicalPoison:
-		sizeToFilter = 2
-	case GeographicalFire:
-		sizeToFilter = 8
-	default:
-	}
 	i := 0
 	for _, zone := range zones {
-		if len(zone) > sizeToFilter {
+		//エッジを取り除いても大丈夫か？
+		if (HaveWithOutEdge(zone)) {
 			filtered = append(filtered, []GameMapPosition{})
 			filtered[i] = append(filtered[i], zone...)
 			i++
 		}
 	}
+
 	return filtered
+}
+
+//エッジを取り除いても面積があるか
+func HaveWithOutEdge(zone []GameMapPosition) bool {
+	areaEdge := 0
+	areaAll := len(zone)
+	for _, pos := range zone {
+		if isEdgeInZone(zone, pos) {
+			areaEdge++
+		}
+	}
+	if (areaAll - areaEdge) > 0 {
+		return true
+	}
+	return false
 }
 
 //いくつSwampを作るか？
@@ -474,13 +474,13 @@ func mountsForSwamp(zones [][]GameMapPosition, geo Geographical) int {
 	default:
 	}
 	mounts := int(float64(zoneCounts * mountsPercents) / 100.0)
-	return mounts
+	return mounts + 3 //TODO,無限ループしないようにする
 }
 
 //勾配を生成
 //ルール: x,yが大きいほど高い
 func (xy *xymap) makeGradient(geo Geographical) {
-	geta := 3
+	geta := 0
 	rowestHigh := 0
 	//険しさ(勾配の範囲)
 	//	steepness := 0
@@ -488,26 +488,26 @@ func (xy *xymap) makeGradient(geo Geographical) {
 	coefficient := 3
 	switch geo {
 	case GeographicalStep:
-		base := lottery.GetRandomInt(1, 3)
+		base := lottery.GetRandomInt(2, 4)
 		rowestHigh = base * coefficient
 		break
 	case GeographicalCave:
 		rowestHigh = 10 * coefficient
 		break
 	case GeographicalRemain:
-		base := lottery.GetRandomInt(1, 5)
+		base := lottery.GetRandomInt(2, 6)
 		rowestHigh = base * coefficient
 		break
 
 	case GeographicalPoison:
-		base := lottery.GetRandomInt(1, 4)
+		base := lottery.GetRandomInt(2, 5)
 		rowestHigh = base * coefficient
 		break
 	case GeographicalFire:
 		rowestHigh = 4 * coefficient
 		break
 	case GeographicalSnow:
-		base := lottery.GetRandomInt(1, 3)
+		base := lottery.GetRandomInt(2, 4)
 		rowestHigh = base * coefficient
 		break
 
