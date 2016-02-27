@@ -257,9 +257,11 @@ func GetIdsWater(game_map *GameMap, gamePartsDict map[string]GameParts, half boo
 
 	//カテゴリ集合体
 	for _, parts := range gamePartsDict {
+		/*
 		if (parts.Category != game_map.Category) {
 			continue
 		}
+		*/
 		if (parts.Harf != half) {
 			continue
 		}
@@ -409,7 +411,7 @@ func GetIdxWithEval3(x int, y int, z int, ids []int) int {
 	num := len(ids)
 	floatId := float64(num) * (val + 1.0) / 2.0
 	idx := int(floatId)
-	fmt.Printf("x:%d,y:%d,z:%d,val:%f,num:%f,idx:%d\n", x, y, z, val, num, idx);
+	fmt.Printf("x:%d,y:%d,z:%d,val:%f,num:%d,idx:%d\n", x, y, z, val, num, idx);
 
 	return idx
 }
