@@ -468,7 +468,7 @@ func (game_map *GameMap) copyFromXY(xy *xymap) {
 			macro := xy.getMatrix(x, y);
 			high := xy.getHigh(x, y);
 			game_map.High[y][x] = high;
-			fmt.Printf("crash x:%d y:%d high%d, lenz:%d",x,y,high, len(game_map.MacroMapTypes))
+			fmt.Printf("crash x:%d y:%d high%d, lenz:%d", x, y, high, len(game_map.MacroMapTypes))
 			for z := 0; z < high; z++ {
 				game_map.MacroMapTypes[z][y][x] = macro;
 			}
@@ -740,10 +740,18 @@ func (game_map *GameMap) createPng(gamePartsDict map[string]GameParts) {
 	}
 	fmt.Printf("aho3:drawed\n")
 
+	//ディレクトリ作成
+	directoryName := game_map.CreateDirectoryName();
+	err := os.MkdirAll(directoryName, 0777)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
 	//ファイル出力
 	fileName := uuid.NewV4().String()
 	game_map.Filename = fileName
-	file, err := os.Create("./output/" + fileName + ".png")
+	file, err := os.Create(directoryName + fileName + ".png")
 	defer file.Close()
 	if err != nil {
 		fmt.Println(err)
@@ -756,6 +764,36 @@ func (game_map *GameMap) createPng(gamePartsDict map[string]GameParts) {
 	}
 	fmt.Printf("aho4:png outputed\n")
 }
+
+func (game_map *GameMap)CreateDirectoryName() string {
+	prefix := "./output/"
+	suffix := "/"
+	word := ""
+	switch game_map.Geographical{
+	case GeographicalStep:
+		word = "平原"
+	case GeographicalCave:
+		word = "洞窟"
+	case GeographicalRemain:
+		word = "遺跡"
+
+	case GeographicalPoison:
+		word = "毒沼"
+	case GeographicalFire:
+		word = "火山"
+	case GeographicalSnow:
+		word = "雪原"
+
+	case GeographicalJozen:
+		word = "城前"
+	case GeographicalCastle:
+		word = "城"
+	}
+	return prefix + word + suffix
+}
+
+
+
 
 //マップ
 type GameMap struct {
@@ -859,9 +897,19 @@ func (game_map *GameMap) createJson(gamePartsDict map[string]GameParts) {
 
 	//	fmt.Printf("bytes:%+v\n", string(bytes))
 
-	file, err := os.Create("./output/" + game_map.Filename + ".json")
+	//ディレクトリ作成
+	directoryName := game_map.CreateDirectoryName();
+	err := os.MkdirAll(directoryName, 0777)
+	if err != nil {
+		fmt.Println("uuuum: ")
+		fmt.Println(err)
+		return
+	}
+
+	file, err := os.Create(directoryName + game_map.Filename + ".json")
 	_, err = file.Write(bytes)
 	if err != nil {
+		fmt.Println("uuuum2: ")
 		fmt.Println(err)
 		return
 	}
