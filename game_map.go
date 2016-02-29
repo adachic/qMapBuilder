@@ -257,28 +257,31 @@ func (game_map *GameMap) initMapPavement() {
 
 //マップカテゴリの抽選結果を返す
 func (game_map *GameMap) initMapCategory() {
-	lot := lottery.New(rand.New(rand.NewSource(time.Now().UnixNano())))
-	categories := []lottery.Interface{
-		CategoryStep,
-		CategoryCave,
-		CategoryRemains,
-
-		CategoryFire,
-		CategoryPoison,
-		CategorySnow,
-
-		CategoryJozen,
-		CategoryCastle,
+	dice := lottery.GetRandomInt(0, 7)
+	category := CategoryStep
+	switch dice {
+	case 0:
+		category = CategoryStep
+	case 1:
+		category = CategoryCave
+	case 2:
+		category = CategoryRemains
+	case 3:
+		category = CategoryFire
+	case 4:
+		category = CategoryPoison
+	case 5:
+		category = CategorySnow
+	case 6:
+		category = CategoryCastle
+	case 7:
+		category = CategoryJozen
 	}
-	result := lot.Lots(
-		categories...,
-	)
-	game_map.Category = categories[result].(Category)
+	game_map.Category = category
 
+	//parts定義にない(MapEditorで定義されてないカテゴリ)
 	switch(game_map.Category){
 	case CategoryPoison:
-		fallthrough
-	case CategoryFire:
 		fallthrough
 	case CategorySnow:
 		fallthrough
@@ -481,6 +484,9 @@ func (game_map *GameMap) copyFromXY(xy *xymap) {
 func (game_map *GameMap) bindToGameParts(gamePartsDict map[string]GameParts) bool {
 	/*選定パーツのゾーニング*/
 	//1.主幹パーツの決定:道・ラフ・その他
+	if(game_map.Geographical == GeographicalFire ){
+		fmt.Println("fire10");
+	}
 
 	idsRoadFull := GetIdsRoad(game_map, gamePartsDict, false)
 	idsRoughFull := GetIdsRough(game_map, gamePartsDict, false)
@@ -791,9 +797,6 @@ func (game_map *GameMap)CreateDirectoryName() string {
 	}
 	return prefix + word + suffix
 }
-
-
-
 
 //マップ
 type GameMap struct {

@@ -13,7 +13,7 @@ func main() {
 
 	//pre;
 	//- [x] パーツ情報のロード
-	gamePartsDict = CreateGamePartsDict("./assets/IntegratedPartsAll2.json") //harfId対応済み
+	gamePartsDict = CreateGamePartsDict("./assets/IntegratedPartsAll3.json") //harfId対応済み
 
 	//- [x] アルゴリズムで自動生成
 	condition := GameMapCondition{}

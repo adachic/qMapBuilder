@@ -106,7 +106,7 @@ func CreateGamePartsDict(filePath string) map[string]GameParts {
 //gamePartsがmapに適応するならtrue
 func IsIncludedWaterType(game_map GameMap, gameParts GameParts) bool {
 	switch game_map.Geographical{
-	case GeographicalCave     :
+	case GeographicalFire     :
 		if gameParts.WaterType == WaterTypeFlame {
 			return true
 		}
