@@ -25,4 +25,9 @@ adachicは、従来、qMapEditorで全てのマップを１パネルずつクラ
 
 出力されるマップの例
 
-![代替テキスト](画像のURL)
+![](15ee7878-9752-4bf4-9ef2-2e675e95164e.png)
+
+![](2996d28d-b094-4e84-bfce-ffcbec6bda14.png)
+
+![](c5f24c75-1fa0-4d4f-b7cf-3590a0337ea4.png)
+
