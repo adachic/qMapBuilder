@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"strconv"
 	"github.com/ojrac/opensimplex-go"
@@ -88,12 +87,12 @@ func CreateGamePartsDict(filePath string) map[string]GameParts {
 
 	json_err := json.Unmarshal(file, &partsDict)
 	if err != nil {
-		fmt.Println("Format Error: ", json_err)
+		Dlogln("Format Error: ", json_err)
 	}
 
-	fmt.Printf("%+v\n", partsDict)
-	fmt.Printf("%+v\n", len(partsDict))
-	fmt.Printf("%+v\n", partsDict["15"])
+	DDDlog("%+v\n", partsDict)
+	DDDlog("%+v\n", len(partsDict))
+	DDDlog("%+v\n", partsDict["15"])
 
 	for _, value := range partsDict {
 		value.IsEmpty = false;
@@ -181,7 +180,7 @@ func GetIdsRoad(game_map *GameMap, gamePartsDict map[string]GameParts, half bool
 		idsRoad = append(idsRoad, i)
 	}
 
-	fmt.Printf("idsRoad:%+v\n", idsRoad)
+	DDDlog("idsRoad:%+v\n", idsRoad)
 	return idsRoad
 }
 
@@ -214,7 +213,7 @@ func GetIdsRough(game_map *GameMap, gamePartsDict map[string]GameParts, half boo
 		i, _ := strconv.Atoi(parts.Id)
 		idsRough = append(idsRough, i)
 	}
-	fmt.Printf("idsRough:%+v\n", idsRough)
+	DDDlog("idsRough:%+v\n", idsRough)
 	return idsRough
 }
 
@@ -246,7 +245,7 @@ func GetIdsWall(game_map *GameMap, gamePartsDict map[string]GameParts, half bool
 		i, _ := strconv.Atoi(parts.Id)
 		idsWall = append(idsWall, i)
 	}
-	fmt.Printf("idsWall:%+v\n", idsWall)
+	DDDlog("idsWall:%+v\n", idsWall)
 	return idsWall
 }
 
@@ -275,7 +274,7 @@ func GetIdsWater(game_map *GameMap, gamePartsDict map[string]GameParts, half boo
 		i, _ := strconv.Atoi(parts.Id)
 		idsParts = append(idsParts, i)
 	}
-	fmt.Printf("idsWarter:%+v\n", idsParts)
+	DDDlog("idsWarter:%+v\n", idsParts)
 	return idsParts
 }
 
@@ -368,7 +367,7 @@ x int, y int, z int) GameParts {
 	if (wallIdsCount > 0) {
 		//id := lottery.GetRandomInt(0, wallIdsCount)
 		idx := GetIdxWithEval3(x, y, z, idsWall)
-		fmt.Printf("wall id: %2d", idsWall[idx])
+		DDDlog("wall id: %2d", idsWall[idx])
 		return gamePartsDict[strconv.Itoa(idsWall[idx])]
 	}
 
@@ -376,7 +375,7 @@ x int, y int, z int) GameParts {
 	if (roughIdsCount > 0) {
 		idx := GetIdxWithEval3(x, y, z, idsRough)
 		//id := lottery.GetRandomInt(0, roughIdsCount)
-		fmt.Printf("rough id: %2d", idsRough[idx])
+		DDDlog("rough id: %2d", idsRough[idx])
 		return gamePartsDict[strconv.Itoa(idsRough[idx])]
 	}
 
@@ -384,7 +383,7 @@ x int, y int, z int) GameParts {
 	if (roadIdsCount > 0) {
 		idx := GetIdxWithEval3(x, y, z, idsRoad)
 		//id := lottery.GetRandomInt(0, roadIdsCount)
-		fmt.Printf("road id: %2d", idsRoad[idx])
+		DDDlog("road id: %2d", idsRoad[idx])
 		return gamePartsDict[strconv.Itoa(idsRoad[idx])]
 	}
 	return GameParts{}
@@ -398,7 +397,7 @@ func GetIdxWithEval2(x int, y int, ids []int) int {
 	num := len(ids)
 	floatId := float64(num) * (val + 1.0) / 2.0
 	idx := int(floatId)
-	fmt.Printf("x:%d,y:%d,val:%f,num:%f,idx:%d\n", x, y, val, num, idx);
+	DDDlog("x:%d,y:%d,val:%f,num:%f,idx:%d\n", x, y, val, num, idx);
 
 	return idx
 }
@@ -411,7 +410,7 @@ func GetIdxWithEval3(x int, y int, z int, ids []int) int {
 	num := len(ids)
 	floatId := float64(num) * (val + 1.0) / 2.0
 	idx := int(floatId)
-	fmt.Printf("x:%d,y:%d,z:%d,val:%f,num:%d,idx:%d\n", x, y, z, val, num, idx);
+	DDDlog("x:%d,y:%d,z:%d,val:%f,num:%d,idx:%d\n", x, y, z, val, num, idx);
 
 	return idx
 }

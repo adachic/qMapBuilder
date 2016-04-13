@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"math"
 	"math/rand"
 	"time"
@@ -149,30 +148,30 @@ func NewGameMap(condition GameMapCondition) *GameMap {
 func (game_map *GameMap) init(condition GameMapCondition) *GameMap {
 	//難易度を初期化
 	game_map.initMapDifficult()
-	fmt.Printf("difficult: %+v\n", game_map.Difficult)
+	Dlog("difficult: %+v\n", game_map.Difficult)
 
 	//カテゴリを初期化
 	game_map.initMapCategory()
-	fmt.Printf("category: %+v\n", game_map.Category)
+	Dlog("category: %+v\n", game_map.Category)
 
 	//道の舗装度を初期化
 	game_map.initMapPavement()
 
 	//マップのサイズを初期化
 	game_map.initMapSize()
-	fmt.Printf("mapSize: %+v\n", game_map.Size)
+	Dlog("mapSize: %+v\n", game_map.Size)
 
 	//大まかな地形を初期化
 	game_map.initMapGeographical()
 
 	//味方開始ポイントを初期化
 	game_map.initAllyStartPoint()
-	fmt.Printf("allyStartPoint: %+v\n", game_map.AllyStartPoint)
+	Dlog("allyStartPoint: %+v\n", game_map.AllyStartPoint)
 
 	//敵開始ポイントを決定
 	game_map.initEnemyStartPoints()
 	for _, enemyStartPoint := range game_map.EnemyStartPoints { // キーは使われません
-		fmt.Printf("enemyStartPoint: %+v\n", enemyStartPoint)
+		Dlog("enemyStartPoint: %+v\n", enemyStartPoint)
 	}
 
 	//2次元マップ生成
@@ -300,11 +299,11 @@ func (game_map *GameMap) initMapSize() {
 	//面積
 	area := CreateArea(game_map.Difficult)
 
-	fmt.Printf("form: %+v\n", rectForm)
-	fmt.Printf("area: %+v\n", area)
-	fmt.Printf("aspect: %f\n", aspect)
+	DDlog("form: %+v\n", rectForm)
+	DDlog("area: %+v\n", area)
+	DDlog("aspect: %f\n", aspect)
 	yy := float32(area) / float32(aspect)
-	fmt.Printf("yy: %f\n", yy)
+	DDlog("yy: %f\n", yy)
 	y := int(math.Sqrt(float64(yy)))
 	if y < 1 {
 		y = 1
@@ -372,7 +371,7 @@ func (game_map *GameMap) initAllyStartPoint() {
 		seed = Range{0, 20}
 		break
 	}
-	fmt.Print("seed", seed.Min, " ", seed.Max)
+	DDlog("seed", seed.Min, " ", seed.Max)
 	distanceFrom := lottery.GetRandomInt(seed.Min, seed.Max)
 	game_map.AllyStartPoint, _ = CreateRandomPositionInMap(
 		game_map.Size,
@@ -471,7 +470,7 @@ func (game_map *GameMap) copyFromXY(xy *xymap) {
 			macro := xy.getMatrix(x, y);
 			high := xy.getHigh(x, y);
 			game_map.High[y][x] = high;
-			fmt.Printf("crash x:%d y:%d high%d, lenz:%d", x, y, high, len(game_map.MacroMapTypes))
+			DDlog("crash x:%d y:%d high%d, lenz:%d", x, y, high, len(game_map.MacroMapTypes))
 			for z := 0; z < high; z++ {
 				game_map.MacroMapTypes[z][y][x] = macro;
 			}
@@ -485,7 +484,7 @@ func (game_map *GameMap) bindToGameParts(gamePartsDict map[string]GameParts) boo
 	/*選定パーツのゾーニング*/
 	//1.主幹パーツの決定:道・ラフ・その他
 	if(game_map.Geographical == GeographicalFire ){
-		fmt.Println("fire10");
+		DDDlogln("fire10");
 	}
 
 	idsRoadFull := GetIdsRoad(game_map, gamePartsDict, false)
@@ -548,31 +547,31 @@ func (game_map *GameMap) bindToGameParts(gamePartsDict map[string]GameParts) boo
 				//1.土
 				if (z < high - 1) {
 					parts := GetGamePartsFoundation(idsWallFull, idsRoughFull, idsRoadFull, gamePartsDict, x, y, z);
-					fmt.Printf("found  : %2d,%2d,%2d id:%s \n", z, y, x, parts.Id)
+					DDDlog("found  : %2d,%2d,%2d id:%s \n", z, y, x, parts.Id)
 					if (shouldHalf) {
 						//halfにコンバートする
 						before := parts.Id
 						parts = GetHalfParts(idsRoadHalf, idsRoughHalf, idsWallHalf, parts, gamePartsDict, macro, x, y, z)
-						fmt.Printf("converted from %s to %s \n", before, parts.Id)
+						DDDlog("converted from %s to %s \n", before, parts.Id)
 					}
 					game_map.JungleGym[z][y][x] = parts;
 					continue;
 				}
 				//2.表層(道,ラフ,壁)
 				parts := GetGamePartsSurface(idsWallFull, idsRoughFull, idsRoadFull, gamePartsDict, macro, x, y, z);
-				fmt.Printf("surface: %2d,%2d,%2d id:%s macro[%v]\n", z, y, x, parts.Id, macro)
+				DDDlog("surface: %2d,%2d,%2d id:%s macro[%v]\n", z, y, x, parts.Id, macro)
 				if (shouldHalf) {
 					if (macro == MacroMapTypeSwampWater ||
 					macro == MacroMapTypeSwampRava ||
 					macro == MacroMapTypeSwampPoison ||
 					macro == MacroMapTypeSwampHeal) {
-						fmt.Print("unko3000")
+						DDDlog("unko3000")
 						parts = GetGamePartsWater(idsWaterHalf, gamePartsDict, macro, x, y, z)
 					}else {
 						//halfにコンバートする
 						before := parts.Id
 						parts = GetHalfParts(idsRoadHalf, idsRoughHalf, idsWallHalf, parts, gamePartsDict, macro, x, y, z)
-						fmt.Printf("converted from %s to %s \n", before, parts.Id)
+						DDDlog("converted from %s to %s \n", before, parts.Id)
 					}
 				}
 				game_map.JungleGym[z][y][x] = parts;
@@ -587,12 +586,12 @@ func imageTile32(tile Tile) *image.RGBA {
 	file, err := os.Open("./assets/" + tile.FilePath)
 	defer file.Close()
 	if err != nil {
-		fmt.Println(err)
+		Dlogln(err)
 		return nil
 	}
 	img, err := png.Decode(file)
 	if err != nil {
-		fmt.Println(err)
+		Dlogln(err)
 		return nil
 	}
 	//	tileRect := image.Rect(tile.X, tile.Y, tile.Width, tile.Height)
@@ -613,12 +612,12 @@ func imageTile64(tile Tile) *image.RGBA {
 	file, err := os.Open("./assets/" + tile.FilePath)
 	defer file.Close()
 	if err != nil {
-		fmt.Println(err)
+		Dlogln(err)
 		return nil
 	}
 	img, err := png.Decode(file)
 	if err != nil {
-		fmt.Println(err)
+		Dlogln(err)
 		return nil
 	}
 	//	tileRect := image.Rect(tile.X, tile.Y, tile.Width, tile.Height)
@@ -690,7 +689,7 @@ func (game_map *GameMap) createPng(gamePartsDict map[string]GameParts) {
 	outputHeight := 16 + game_map.Size.MaxX * 8 + game_map.Size.MaxY * 8 + game_map.Size.MaxZ * 16
 	outputRect := image.Rect(0, 0, outputWidth, outputHeight)
 
-	fmt.Printf("aho1:%+v\n", outputRect)
+	DDDlog("aho1:%+v\n", outputRect)
 
 	//出力するイメージ
 	outputImg := image.NewRGBA(outputRect)
@@ -703,7 +702,7 @@ func (game_map *GameMap) createPng(gamePartsDict map[string]GameParts) {
 		}
 	}
 
-	fmt.Printf("aho2:rendering...\n")
+	DDDlog("aho2:rendering...\n")
 	for z := 0; z <= game_map.Size.MaxZ; z++ {
 		for y := (game_map.Size.MaxY - 1); y >= 0; y-- {
 			for x := 0; x < game_map.Size.MaxX; x++ {
@@ -744,13 +743,13 @@ func (game_map *GameMap) createPng(gamePartsDict map[string]GameParts) {
 			}
 		}
 	}
-	fmt.Printf("aho3:drawed\n")
+	DDDlog("aho3:drawed\n")
 
 	//ディレクトリ作成
 	directoryName := game_map.CreateDirectoryName();
 	err := os.MkdirAll(directoryName, 0777)
 	if err != nil {
-		fmt.Println(err)
+		Dlogln(err)
 		return
 	}
 
@@ -760,15 +759,15 @@ func (game_map *GameMap) createPng(gamePartsDict map[string]GameParts) {
 	file, err := os.Create(directoryName + fileName + ".png")
 	defer file.Close()
 	if err != nil {
-		fmt.Println(err)
+		Dlogln(err)
 		return
 	}
 	err = png.Encode(file, outputImg)
 	if err != nil {
-		fmt.Println(err)
+		Dlogln(err)
 		os.Exit(1)
 	}
-	fmt.Printf("aho4:png outputed\n")
+	DDDlog("aho4:png outputed\n")
 }
 
 func (game_map *GameMap)CreateDirectoryName() string {
@@ -843,12 +842,12 @@ type JsonGameMap struct {
 
 //Json生成
 func (game_map *GameMap) createJson(gamePartsDict map[string]GameParts) {
-	fmt.Printf("==output json==\n")
+	Dlog("==output json==\n")
 
 	game_map.AllyStartPoint.Z = game_map.High[game_map.AllyStartPoint.Y][game_map.AllyStartPoint.X] / 2 // - 1
 	for i, enemyStartPoint := range game_map.EnemyStartPoints { // キーは使われません
 		game_map.EnemyStartPoints[i].Z = game_map.High[game_map.EnemyStartPoints[i].Y][game_map.EnemyStartPoints[i].X] / 2  //- 1
-		fmt.Printf("enemyStartPoint: %+v\n", enemyStartPoint)
+		DDlog("enemyStartPoint: %+v\n", enemyStartPoint)
 	}
 
 	jsonStub := JsonGameMap{
@@ -895,7 +894,7 @@ func (game_map *GameMap) createJson(gamePartsDict map[string]GameParts) {
 
 	bytes, json_err := json.Marshal(jsonStub)
 	if json_err != nil {
-		fmt.Println("Json Encode Error: ", json_err)
+		Dlog("Json Encode Error: ", json_err)
 	}
 
 	//	fmt.Printf("bytes:%+v\n", string(bytes))
@@ -904,16 +903,16 @@ func (game_map *GameMap) createJson(gamePartsDict map[string]GameParts) {
 	directoryName := game_map.CreateDirectoryName();
 	err := os.MkdirAll(directoryName, 0777)
 	if err != nil {
-		fmt.Println("uuuum: ")
-		fmt.Println(err)
+		Dlogln("uuuum: ")
+		Dlogln(err)
 		return
 	}
 
 	file, err := os.Create(directoryName + game_map.Filename + ".json")
 	_, err = file.Write(bytes)
 	if err != nil {
-		fmt.Println("uuuum2: ")
-		fmt.Println(err)
+		Dlogln("uuuum2: ")
+		Dlogln(err)
 		return
 	}
 	defer file.Close()

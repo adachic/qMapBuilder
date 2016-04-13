@@ -1,34 +1,24 @@
 <component name="libraryTable">
   <library name="GOPATH &lt;qMapBuilder&gt;">
     <CLASSES>
-      <root url="file://$PROJECT_DIR$/../../../houchiApp" />
       <root url="file://$PROJECT_DIR$/../.." />
       <root url="file://$PROJECT_DIR$/../../../gopkg.in" />
+      <root url="file://$PROJECT_DIR$/../../../houchiApp" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
     <excluded>
-      <root url="file://$PROJECT_DIR$/../../kr/godep/Godeps/_workspace" />
-      <root url="file://$PROJECT_DIR$" />
-      <root url="file://$PROJECT_DIR$/../../mattn/go-colorable/_example" />
-      <root url="file://$PROJECT_DIR$/../../tools/godep/Godeps/_workspace" />
-      <root url="file://$PROJECT_DIR$/../../kyokomi/qMapBuilder/.idea" />
-      <root url="file://$PROJECT_DIR$/../noize/.idea" />
-      <root url="file://$PROJECT_DIR$/../lottery/.git" />
-      <root url="file://$PROJECT_DIR$/../qEnemyGenerator/.idea" />
       <root url="file://$PROJECT_DIR$/../../mattn/go-colorable/.git" />
-      <root url="file://$PROJECT_DIR$/../../kyokomi/qMapBuilder/.git" />
-      <root url="file://$PROJECT_DIR$/../../satori/go.uuid/.git" />
-      <root url="file://$PROJECT_DIR$/../../kr/godep/.git" />
-      <root url="file://$PROJECT_DIR$/../../tools/godep/.git" />
-      <root url="file://$PROJECT_DIR$/../qEnemyGenerator/.git" />
-      <root url="file://$PROJECT_DIR$/../../ojrac/opensimplex-go/.git" />
       <root url="file://$PROJECT_DIR$/.idea" />
+      <root url="file://$PROJECT_DIR$/../../mattn/go-colorable/_example" />
+      <root url="file://$PROJECT_DIR$" />
+      <root url="file://$PROJECT_DIR$/../../ojrac/opensimplex-go/.git" />
       <root url="file://$PROJECT_DIR$/../../../gopkg.in/go-pp/pp.v2/.git" />
+      <root url="file://$PROJECT_DIR$/../lottery/.git" />
+      <root url="file://$PROJECT_DIR$/../qEnemyGenerator/.git" />
+      <root url="file://$PROJECT_DIR$/../qEnemyGenerator/.idea" />
       <root url="file://$PROJECT_DIR$/.git" />
-      <root url="file://$PROJECT_DIR$/../../../houchiApp/Godeps/_workspace" />
-      <root url="file://$PROJECT_DIR$/../pNoize/.idea" />
-      <root url="file://$PROJECT_DIR$/../../../houchiApp/.git" />
+      <root url="file://$PROJECT_DIR$/../../satori/go.uuid/.git" />
     </excluded>
   </library>
 </component>

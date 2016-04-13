@@ -3,7 +3,7 @@ package main
 import (
 //	"flag"
 	"fmt"
-	"sync"
+//	"sync"
 )
 
 var gamePartsDict map[string]GameParts
@@ -25,18 +25,18 @@ func main() {
 //基本フロー
 func flow(condition GameMapCondition) {
 	//マップ生成
-	fmt.Println("====createMap====")
+	Dlogln("====createMap====")
 	game_map := NewGameMap(condition)
 
-	fmt.Println("====bind====")
+	Dlogln("====bind====")
 
 	//実際のパーツとのひも付け
 	if(!game_map.bindToGameParts(gamePartsDict)){
 		//紐付けるパーツがない
-		fmt.Println("====dame===")
+		Dlogln("====dame===")
 		return;
 	}
-	fmt.Println("====drawMap====:geographical:",game_map.Geographical)
+	Dlogln("====drawMap====:geographical:",game_map.Geographical)
 
 	//png生成
 	game_map.createPng(gamePartsDict)
@@ -47,14 +47,14 @@ func flow(condition GameMapCondition) {
 
 //雑に100回まわしてみる
 func bulc(condition GameMapCondition) {
-	x := 100
-	/*
+//	x := 100
+	x := 1
 	for x > 0 {
-		x--
+		Dlogln("[",x,"]")
+		x++
 		flow(condition)
 	}
-	return;
-	*/
+	/*
 	wt := sync.WaitGroup{}
 	for x > 0 {
 		x--
@@ -66,4 +66,5 @@ func bulc(condition GameMapCondition) {
 		}()
 	}
 	wt.Wait()
+	*/
 }

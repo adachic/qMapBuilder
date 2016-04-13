@@ -3,9 +3,9 @@ package main
 import (
 	"math"
 	"github.com/adachic/lottery"
-	"fmt"
 	"github.com/ojrac/opensimplex-go"
 	"strconv"
+	"fmt"
 )
 
 type xymap struct {
@@ -330,14 +330,14 @@ func (xy *xymap) makeSwamp(geo Geographical) {
 	//ゾーニング
 	zones := xy.zoningForMakeSwamp()
 	for _, val := range zones {
-		fmt.Printf("ahongoS:%d \n", len(val))
+		DDDlog("ahongoS:%d \n", len(val))
 	}
 
 	actualZones := trimZoneSizeForSwamp(zones, geo)
 
 	//どれくらい水を配置するのか？
 	mounts := mountsForSwamp(actualZones, geo)
-	fmt.Printf("mounts:%d \n", mounts)
+	DDDlog("amounts:%d \n", mounts)
 
 	//どのidxに配置するのか？
 	alreadyPutsIdx := []int{}
@@ -389,11 +389,11 @@ func (xy *xymap) putSwamp(targetZone []GameMapPosition, geo Geographical) {
 			continue
 		}
 		//エッジ部分には水置かない
-		fmt.Print("unko2000")
+		DDDlog("unko2000")
 		if (isEdgeInZone(targetZone, pos)) {
 			continue
 		}
-		fmt.Print("unko2001")
+		DDDlog("unko2001")
 		xy.matrix[pos.Y][pos.X] = swampType
 	}
 
@@ -585,38 +585,38 @@ func (xy *xymap) getNearHeightPanels(x int, y int, opened *[]GameMapPosition) *[
 //x, y, openedはすでにオープンした累積
 func (xy *xymap) openNearPanel(x int, y int, opened *[]GameMapPosition) *[]GameMapPosition {
 	currentHight := xy.high[y][x]
-	fmt.Printf("open x:%d, y:%d, z:%d\n", x, y, currentHight);
+	DDDlog("open0 x:%d, y:%d, z:%d\n", x, y, currentHight);
 
 	if (xy.shouldOpen(currentHight, x, y, *opened)) {
 		*opened = append(*opened, GameMapPosition{X:x, Y:y, Z:currentHight})
-		fmt.Printf("opened1:%d\n", len(*opened));
+		DDDlog("opened1:%d\n", len(*opened));
 	}
 	if (xy.shouldOpen(currentHight, x, y - 1, *opened)) {
 		opens := xy.openNearPanel(x, y - 1, opened)
 		*opened = append(*opened, *opens...)
-		fmt.Printf("opened20:%d\n", len(*opened));
+		DDDlog("opened20:%d\n", len(*opened));
 		trim(opened)
-		fmt.Printf("opened2 :%d\n", len(*opened));
+		DDDlog("opened2 :%d\n", len(*opened));
 	}
 	if (xy.shouldOpen(currentHight, x, y + 1, *opened)) {
 		opens := xy.openNearPanel(x, y + 1, opened)
 		*opened = append(*opened, *opens...)
 		trim(opened)
-		fmt.Printf("opened3:%d\n", len(*opened));
+		DDDlog("opened3:%d\n", len(*opened));
 	}
 	if (xy.shouldOpen(currentHight, x - 1, y, *opened)) {
 		opens := xy.openNearPanel(x - 1, y, opened)
 		*opened = append(*opened, *opens...)
 		trim(opened)
-		fmt.Printf("opened4:%d\n", len(*opened));
+		DDDlog("opened4:%d\n", len(*opened));
 	}
 	if (xy.shouldOpen(currentHight, x + 1, y, *opened)) {
 		opens := xy.openNearPanel(x + 1, y, opened)
 		*opened = append(*opened, *opens...)
 		trim(opened)
-		fmt.Printf("opened5:%d\n", len(*opened));
+		DDDlog("opened5:%d\n", len(*opened));
 	}
-	fmt.Printf("close x:%d, y:%d, z:%d\n", x, y, currentHight);
+	DDDlog("close x:%d, y:%d, z:%d\n", x, y, currentHight);
 	//	trim(opened);
 	return opened
 }
@@ -652,7 +652,7 @@ func (xy *xymap) shouldOpen(currentHigh int, x int, y int, opened []GameMapPosit
 	for _, pos := range opened {
 		if pos.X == x && pos.Y == y {
 			//すでにオープンしていた
-			fmt.Printf("alreadyed x:%d, y:%d\n", x, y);
+			DDDlog("alreadyed x:%d, y:%d\n", x, y);
 			return false;
 		}
 	}
@@ -667,7 +667,7 @@ func (xy *xymap) validate() {
 	//ゾーニング
 	zones := xy.zoningForValidate()
 	for _, val := range zones {
-		fmt.Printf("ahongoF:%d \n", len(val))
+		DDDlog("ahongoF:%d \n", len(val))
 	}
 
 	done := true
@@ -691,7 +691,7 @@ func (xy *xymap) validate() {
 	if (!done) {
 		goto retry;
 	}
-	fmt.Printf("unko50000")
+	DDDlog("unko50000")
 }
 
 //zone1,zone2が隣り合っていればtrue,
@@ -750,7 +750,7 @@ func (xy *xymap) isNeighbough(zone1 []GameMapPosition, zone2 []GameMapPosition) 
 //無事全てをつなぎ終えたらtrue
 func (xy *xymap) addStirsBetweenZones(zone1 []GameMapPosition, zone2 []GameMapPosition,
 zone1edge GameMapPosition, zone2edge GameMapPosition) bool {
-	fmt.Printf("edge1:%+v edge2:%+v", zone1edge, zone2edge)
+	DDDlog("edge1:%+v edge2:%+v", zone1edge, zone2edge)
 
 	beginingHeight := 0
 
@@ -895,7 +895,7 @@ func (xy *xymap) zoningForValidate() [][]GameMapPosition {
 
 			totalOpened = append(totalOpened, *zone...)
 			i++
-			fmt.Printf("ahongo:%d x:%d,y:%d,z%d, opened:%d\n", i, x, y, xy.high[y][x], len(*zone))
+			DDDlog("ahongo:%d x:%d,y:%d,z%d, opened:%d\n", i, x, y, xy.high[y][x], len(*zone))
 		}
 	}
 	return zones
@@ -931,7 +931,7 @@ func (xy *xymap) zoningForMakeSwamp() [][]GameMapPosition {
 
 			totalOpened = append(totalOpened, *zone...)
 			i++
-			fmt.Printf("ahongo:%d x:%d,y:%d,z%d, opened:%d\n", i, x, y, xy.high[y][x], len(*zone))
+			DDDlog("ahongo:%d x:%d,y:%d,z%d, opened:%d\n", i, x, y, xy.high[y][x], len(*zone))
 		}
 	}
 
@@ -947,38 +947,38 @@ func (xy *xymap) getNearHeightPanelsSame(x int, y int, opened *[]GameMapPosition
 //x, y, openedはすでにオープンした累積
 func (xy *xymap) openNearPanelSame(x int, y int, opened *[]GameMapPosition) *[]GameMapPosition {
 	currentHight := xy.high[y][x]
-	fmt.Printf("open x:%d, y:%d, z:%d\n", x, y, currentHight);
+	DDDlog("open1 x:%d, y:%d, z:%d\n", x, y, currentHight);
 
 	if (xy.shouldOpenToSame(currentHight, x, y, *opened)) {
 		*opened = append(*opened, GameMapPosition{X:x, Y:y, Z:currentHight})
-		fmt.Printf("opened1:%d\n", len(*opened));
+		DDDlog("opened1:%d\n", len(*opened));
 	}
 	if (xy.shouldOpenToSame(currentHight, x, y - 1, *opened)) {
 		opens := xy.openNearPanelSame(x, y - 1, opened)
 		*opened = append(*opened, *opens...)
-		fmt.Printf("opened20:%d\n", len(*opened));
+		DDDlog("opened20:%d\n", len(*opened));
 		trim(opened)
-		fmt.Printf("opened2 :%d\n", len(*opened));
+		DDDlog("opened2 :%d\n", len(*opened));
 	}
 	if (xy.shouldOpenToSame(currentHight, x, y + 1, *opened)) {
 		opens := xy.openNearPanelSame(x, y + 1, opened)
 		*opened = append(*opened, *opens...)
 		trim(opened)
-		fmt.Printf("opened3:%d\n", len(*opened));
+		DDDlog("opened3:%d\n", len(*opened));
 	}
 	if (xy.shouldOpenToSame(currentHight, x - 1, y, *opened)) {
 		opens := xy.openNearPanelSame(x - 1, y, opened)
 		*opened = append(*opened, *opens...)
 		trim(opened)
-		fmt.Printf("opened4:%d\n", len(*opened));
+		DDDlog("opened4:%d\n", len(*opened));
 	}
 	if (xy.shouldOpenToSame(currentHight, x + 1, y, *opened)) {
 		opens := xy.openNearPanelSame(x + 1, y, opened)
 		*opened = append(*opened, *opens...)
 		trim(opened)
-		fmt.Printf("opened5:%d\n", len(*opened));
+		DDDlog("opened5:%d\n", len(*opened));
 	}
-	fmt.Printf("close x:%d, y:%d, z:%d\n", x, y, currentHight);
+	DDDlog("close x:%d, y:%d, z:%d\n", x, y, currentHight);
 	//	trim(opened);
 	return opened
 }
@@ -996,7 +996,7 @@ func (xy *xymap) shouldOpenToSame(currentHigh int, x int, y int, opened []GameMa
 	for _, pos := range opened {
 		if pos.X == x && pos.Y == y {
 			//すでにオープンしていた
-			fmt.Printf("alreadyed x:%d, y:%d\n", x, y);
+			DDDlog("alreadyed x:%d, y:%d\n", x, y);
 			return false;
 		}
 	}

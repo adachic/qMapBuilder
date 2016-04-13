@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"math"
 
 	"github.com/adachic/lottery"
@@ -84,13 +83,13 @@ func CreateRandomPositionInMap(mapSize GameMapSize, criteria GameMapPosition, di
 		distanceFromCriteria := math.Sqrt(math.Pow((float64(x2-criteria.X)), 2) +
 			math.Pow((float64(y2-criteria.Y)), 2))
 
-		fmt.Print("distanceFromCreteria:", distanceFromCriteria,
+		DDDlogln("distanceFromCreteria:", distanceFromCriteria,
 			" ?", float64(r-1), "\n")
 
 		if distanceFromCriteria < float64(r-1) {
 			continue
 		}
-		fmt.Print("distanceFrom:", distanceFrom,
+		DDDlogln("distanceFrom:", distanceFrom,
 			" degree:", degree,
 			" radian:", radian,
 			" r:", r,
@@ -141,8 +140,8 @@ func CreateAspectOfRectFrom(rectForm RectForm) float32 {
 		shorter = x
 	}
 
-	fmt.Printf("longer: %+v\n", longer)
-	fmt.Printf("shorter: %+v\n", shorter)
+	DDDlog("longer: %+v\n", longer)
+	DDDlog("shorter: %+v\n", shorter)
 	switch rectForm {
 	case horizontalLong:
 		ret = float32(longer) / float32(shorter)
