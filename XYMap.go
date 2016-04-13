@@ -474,7 +474,7 @@ func mountsForSwamp(zones [][]GameMapPosition, geo Geographical) int {
 	default:
 	}
 	mounts := int(float64(zoneCounts * mountsPercents) / 100.0)
-	return mounts + 3 //TODO,無限ループしないようにする
+	return mounts //TODO 数が少ない？
 }
 
 //勾配を生成
