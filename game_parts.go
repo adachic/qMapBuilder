@@ -90,9 +90,11 @@ func CreateGamePartsDict(filePath string) map[string]GameParts {
 		Dlogln("Format Error: ", json_err)
 	}
 
+	/*
 	DDDlog("%+v\n", partsDict)
 	DDDlog("%+v\n", len(partsDict))
 	DDDlog("%+v\n", partsDict["15"])
+	*/
 
 	for _, value := range partsDict {
 		value.IsEmpty = false;

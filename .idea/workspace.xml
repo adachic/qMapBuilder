@@ -2,8 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="dbdfc5b1-7968-49b2-8c73-aab4ecc9d501" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.makemap.sh.swp" afterPath="$PROJECT_DIR$/.makemap.sh.swp" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/makemap.sh" afterPath="$PROJECT_DIR$/makemap.sh" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.log.swo" afterPath="$PROJECT_DIR$/.log.swo" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/log" afterPath="$PROJECT_DIR$/log" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/game_parts.go" afterPath="$PROJECT_DIR$/game_parts.go" />
     </list>
     <ignored path="qMapBuilder.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -59,12 +61,14 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="game_parts.go" pinned="false" current-in-tab="false">
+      <file leaf-file-name="game_parts.go" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/game_parts.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="4" column="0" selection-start-line="4" selection-start-column="0" selection-end-line="4" selection-end-column="0" />
-              <folding />
+            <state vertical-scroll-proportion="0.23655914">
+              <caret line="75" column="29" selection-start-line="75" selection-start-column="29" selection-end-line="75" selection-end-column="29" />
+              <folding>
+                <element signature="e#14#108#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -91,11 +95,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="game_utils.go" pinned="false" current-in-tab="true">
+      <file leaf-file-name="game_utils.go" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/game_utils.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.16129032">
-              <caret line="10" column="0" selection-start-line="10" selection-start-column="0" selection-end-line="10" selection-end-column="0" />
+            <state vertical-scroll-proportion="0.0">
+              <caret line="1" column="0" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
               <folding>
                 <element signature="e#14#26#0" expanded="true" />
               </folding>
@@ -117,7 +121,7 @@
         <entry file="file://$PROJECT_DIR$/main.go">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="15" column="72" selection-start-line="15" selection-start-column="72" selection-end-line="15" selection-end-column="72" />
+              <caret line="15" column="24" selection-start-line="15" selection-start-column="24" selection-end-line="15" selection-end-column="24" />
               <folding>
                 <element signature="e#14#51#0" expanded="true" />
               </folding>
@@ -189,12 +193,12 @@
         <option value="$PROJECT_DIR$/../../../../../qMapBuilder/src/github.com/adachic/lottery/lottery.go" />
         <option value="$PROJECT_DIR$/../lottery/lottery_pnoize.go" />
         <option value="$PROJECT_DIR$/xymap.go" />
-        <option value="$PROJECT_DIR$/game_parts.go" />
         <option value="$PROJECT_DIR$/position.go" />
         <option value="$PROJECT_DIR$/game_map.go" />
         <option value="$PROJECT_DIR$/XYMap.go" />
         <option value="$PROJECT_DIR$/main.go" />
         <option value="$PROJECT_DIR$/game_utils.go" />
+        <option value="$PROJECT_DIR$/game_parts.go" />
       </list>
     </option>
   </component>
@@ -268,6 +272,10 @@
             <PATH_ELEMENT>
               <option name="myItemId" value="qMapBuilder" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="External Libraries" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ExternalLibrariesNode" />
             </PATH_ELEMENT>
           </PATH>
           <PATH>
@@ -665,7 +673,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="17" column="4" selection-start-line="17" selection-start-column="4" selection-end-line="17" selection-end-column="4" />
-          <folding />
+          <folding>
+            <element signature="e#14#108#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -709,7 +719,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="68" column="27" selection-start-line="68" selection-start-column="27" selection-end-line="68" selection-end-column="27" />
-          <folding />
+          <folding>
+            <element signature="e#14#108#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -737,7 +749,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="70" column="0" selection-start-line="70" selection-start-column="0" selection-end-line="70" selection-end-column="0" />
-          <folding />
+          <folding>
+            <element signature="e#14#108#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -765,7 +779,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="17" selection-start-line="0" selection-start-column="17" selection-end-line="0" selection-end-column="17" />
-          <folding />
+          <folding>
+            <element signature="e#14#108#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -793,7 +809,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
+          <folding>
+            <element signature="e#14#108#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -821,7 +839,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
+          <folding>
+            <element signature="e#14#108#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -849,7 +869,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="11" selection-start-line="0" selection-start-column="11" selection-end-line="0" selection-end-column="11" />
-          <folding />
+          <folding>
+            <element signature="e#14#108#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -877,7 +899,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
+          <folding>
+            <element signature="e#14#108#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -905,7 +929,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="11" column="4" selection-start-line="11" selection-start-column="4" selection-end-line="11" selection-end-column="4" />
-          <folding />
+          <folding>
+            <element signature="e#14#108#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -933,7 +959,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
+          <folding>
+            <element signature="e#14#108#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -1035,14 +1063,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/game_parts.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="4" column="0" selection-start-line="4" selection-start-column="0" selection-end-line="4" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/game_map.go">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
@@ -1071,22 +1091,32 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/game_utils.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="1" column="0" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
+          <folding>
+            <element signature="e#14#26#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/main.go">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="15" column="72" selection-start-line="15" selection-start-column="72" selection-end-line="15" selection-end-column="72" />
+          <caret line="15" column="24" selection-start-line="15" selection-start-column="24" selection-end-line="15" selection-end-column="24" />
           <folding>
             <element signature="e#14#51#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/game_utils.go">
+    <entry file="file://$PROJECT_DIR$/game_parts.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.16129032">
-          <caret line="10" column="0" selection-start-line="10" selection-start-column="0" selection-end-line="10" selection-end-column="0" />
+        <state vertical-scroll-proportion="0.23655914">
+          <caret line="75" column="29" selection-start-line="75" selection-start-column="29" selection-end-line="75" selection-end-column="29" />
           <folding>
-            <element signature="e#14#26#0" expanded="true" />
+            <element signature="e#14#108#0" expanded="true" />
           </folding>
         </state>
       </provider>
