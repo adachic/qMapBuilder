@@ -29,38 +29,42 @@ func (s GameMapSize) area() int {
 
 //マップの難度
 type Difficult int
+
 const (
-	easy   Difficult = 10
+	easy Difficult = 10
 	normal Difficult = 3
-	hard   Difficult = 2
+	hard Difficult = 2
 	exhard Difficult = 1
 )
 
 //長方形の形式
 type RectForm int
+
 const (
 	horizontalLong RectForm = 6 //横長
-	verticalLong   RectForm = 5
-	square         RectForm = 2
+	verticalLong RectForm = 5
+	square RectForm = 2
 )
 
 //地形
 type Geographical int
+
 const (
-	GeographicalStep     Geographical = 14 + 10
-	GeographicalCave     Geographical = 8 + 10
-	GeographicalRemain     Geographical = 7 + 10
+	GeographicalStep Geographical = 14 + 10
+	GeographicalCave Geographical = 8 + 10
+	GeographicalRemain Geographical = 7 + 10
 
-	GeographicalPoison  Geographical = 6 + 10
-	GeographicalFire     Geographical = 9 + 10
-	GeographicalSnow     Geographical = 5 + 10
+	GeographicalPoison Geographical = 6 + 10
+	GeographicalFire Geographical = 9 + 10
+	GeographicalSnow Geographical = 5 + 10
 
-	GeographicalJozen  Geographical = 3 + 10
-	GeographicalCastle   Geographical = 4 + 10
+	GeographicalJozen Geographical = 3 + 10
+	GeographicalCastle Geographical = 4 + 10
 )
 
 //マップメタ(ここから詳細なパーツを決定)
 type MacroMapType int
+
 const (
 	MacroMapTypeRoad = 1 + iota
 	MacroMapTypeRough
@@ -169,8 +173,9 @@ func (game_map *GameMap) init(condition GameMapCondition) *GameMap {
 	Dlog("allyStartPoint: %+v\n", game_map.AllyStartPoint)
 
 	//敵開始ポイントを決定
-	game_map.initEnemyStartPoints()
-	for _, enemyStartPoint := range game_map.EnemyStartPoints { // キーは使われません
+	game_map.appendEnemyStartPoints(50, false, nil)
+	for _, enemyStartPoint := range game_map.EnemyStartPoints {
+		// キーは使われません
 		Dlog("enemyStartPoint: %+v\n", enemyStartPoint)
 	}
 
@@ -188,17 +193,38 @@ func (game_map *GameMap) init(condition GameMapCondition) *GameMap {
 
 		//ラフ配置
 
+
 		//味方、敵ポイント
-		xymap.putPoint(game_map.AllyStartPoint, MacroMapTypeAllyPoint)
-		for i := 0; i < len(game_map.EnemyStartPoints); i++ {
-			xymap.putPoint(game_map.EnemyStartPoints[i], MacroMapTypeEnemyPoint)
+		{
+			for i := 0; i < len(game_map.EnemyStartPoints); i++ {
+				xymap.putPoint(game_map.EnemyStartPoints[i], MacroMapTypeEnemyPoint)
+			}
+			xymap.putPoint(game_map.AllyStartPoint, MacroMapTypeAllyPoint)
 		}
 
 		//勾配を生成
 		xymap.makeGradient(game_map.Geographical)
 
+		{
+			//敵ポイント追加
+			game_map.appendEnemyStartPoints(50, true, xymap)
+
+			for _, enemyStartPoint := range game_map.EnemyStartPoints {
+				// キーは使われません
+				Dlog("enemyStartPoint2: %+v\n", enemyStartPoint)
+			}
+			//味方、敵ポイント
+			{
+				for i := 0; i < len(game_map.EnemyStartPoints); i++ {
+					xymap.putPoint(game_map.EnemyStartPoints[i], MacroMapTypeEnemyPoint)
+				}
+				xymap.putPoint(game_map.AllyStartPoint, MacroMapTypeAllyPoint)
+			}
+		}
+
 		//バリデーション
 		xymap.validate()
+
 
 		//水、毒沼配置
 		xymap.makeSwamp(game_map.Geographical)
@@ -380,7 +406,9 @@ func (game_map *GameMap) initAllyStartPoint() {
 }
 
 //敵出現座標の一覧を返す
-func (game_map *GameMap) initEnemyStartPoints() {
+//レシオ・全体の量に対して何％のポイントにするか
+//ラフに生成するか
+func (game_map *GameMap) appendEnemyStartPoints(ratio int, laugh bool, xy *xymap) {
 	type rangeFromAlly struct {
 		Min int
 		Max int
@@ -394,39 +422,59 @@ func (game_map *GameMap) initEnemyStartPoints() {
 	case easy:
 		sattyPointNum = lottery.GetRandomInt(1, 3)
 		rangeFrom = rangeFromAlly{50, 100}
-		break
 	case normal:
 		sattyPointNum = lottery.GetRandomInt(3, 6)
 		rangeFrom = rangeFromAlly{30, 100}
-		break
 	case hard:
 		sattyPointNum = lottery.GetRandomInt(5, 10)
 		rangeFrom = rangeFromAlly{13, 100}
-		break
 	case exhard:
 		sattyPointNum = lottery.GetRandomInt(10, 20)
 		rangeFrom = rangeFromAlly{10, 100}
-		break
+	}
+	sattyPointNum = sattyPointNum * ratio / 100
+	if (sattyPointNum < 1) {
+		sattyPointNum = 1
 	}
 	var sattyPoints []GameMapPosition
 	var radians []float64
+	tryCount := 0
+	allyStartPoint := game_map.AllyStartPoint
+	if (laugh) {
+		tmp := allyStartPoint.X
+		allyStartPoint.X = allyStartPoint.Y
+		allyStartPoint.Y = tmp
+	}
 	for sattyPointNum > 0 {
-		sattyPointNum--
 		//味方ポイントからの距離
 		distance := lottery.GetRandomInt(rangeFrom.Min, rangeFrom.Max)
-		sattyPoint, radian := CreateRandomPositionInMap(game_map.Size, game_map.AllyStartPoint, distance)
+		sattyPoint, radian := CreateRandomPositionInMap(game_map.Size, allyStartPoint, distance)
+		if (laugh) {
+			Dlog("sattyPoint:%+v\n", sattyPoint)
+			if (xy.matrix[sattyPoint.Y][sattyPoint.X] == MacroMapTypeRoad) {
+				tryCount++
+				if (tryCount > 10) {
+					break
+				}
+				continue
+			}
+			tryCount = 0
+		}
 		sattyPoints = append(sattyPoints, sattyPoint)
 		radians = append(radians, radian)
+		sattyPointNum--
 	}
 	//角度をソートする
 	sort.Float64s(radians)
 
 	//エッジ分を追加
 	var sattyPointsEdge []GameMapPosition
-	sattyPointsEdge = CreateEdgePositionInMap(game_map.Size, game_map.AllyStartPoint, radians)
+	sattyPointsEdge = CreateEdgePositionInMap(game_map.Size, allyStartPoint, radians)
 	sattyPoints = append(sattyPoints, sattyPointsEdge...)
 
-	game_map.EnemyStartPoints = sattyPoints
+	DDlog("ahoaho1:%+v\n", game_map.EnemyStartPoints)
+	game_map.EnemyStartPoints = append(game_map.EnemyStartPoints, sattyPoints...)
+	DDlog("ahoaho2:%+v\n", game_map.EnemyStartPoints)
 }
 
 func (game_map *GameMap)fillJungleGymToEmpty() {
@@ -483,7 +531,7 @@ func (game_map *GameMap) copyFromXY(xy *xymap) {
 func (game_map *GameMap) bindToGameParts(gamePartsDict map[string]GameParts) bool {
 	/*選定パーツのゾーニング*/
 	//1.主幹パーツの決定:道・ラフ・その他
-	if(game_map.Geographical == GeographicalFire ){
+	if (game_map.Geographical == GeographicalFire ) {
 		DDDlogln("fire10");
 	}
 
@@ -845,9 +893,15 @@ func (game_map *GameMap) createJson(gamePartsDict map[string]GameParts) {
 	Dlog("==output json==\n")
 
 	game_map.AllyStartPoint.Z = game_map.High[game_map.AllyStartPoint.Y][game_map.AllyStartPoint.X] / 2 // - 1
-	for i, enemyStartPoint := range game_map.EnemyStartPoints { // キーは使われません
-		game_map.EnemyStartPoints[i].Z = game_map.High[game_map.EnemyStartPoints[i].Y][game_map.EnemyStartPoints[i].X] / 2  //- 1
-		DDlog("enemyStartPoint: %+v\n", enemyStartPoint)
+	for i,  _:= range game_map.EnemyStartPoints {
+		// キーは使われません
+		game_map.EnemyStartPoints[i].Z =
+		game_map.High[game_map.EnemyStartPoints[i].Y][game_map.EnemyStartPoints[i].X] / 2  //- 1
+//		Dlog("enemyStartPoint: %+v\n", enemyStartPoint)
+	}
+
+	for _, enemyStartPoint2 := range game_map.EnemyStartPoints {
+		Dlog("enemyStartPointF: %+v\n", enemyStartPoint2)
 	}
 
 	jsonStub := JsonGameMap{

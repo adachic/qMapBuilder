@@ -149,7 +149,6 @@ enemyStartPoints []GameMapPosition) {
 		}
 	}
 
-
 	alreadyPutPathPositions := make([]PathPosition, 0)
 
 	for i := 0; i < len(mapPositions); i++ {
@@ -407,16 +406,16 @@ func isEdgeInZone(zone []GameMapPosition, pos GameMapPosition) bool {
 	NotEdgeLeft := false
 
 	for _, posInZone := range zone {
-		if ((posInZone.X == pos.X - 1) && (posInZone.Y == pos.Y)){
+		if ((posInZone.X == pos.X - 1) && (posInZone.Y == pos.Y)) {
 			NotEdgeLeft = true
 		}
-		if ((posInZone.X == pos.X + 1) && (posInZone.Y == pos.Y)){
+		if ((posInZone.X == pos.X + 1) && (posInZone.Y == pos.Y)) {
 			NotEdgeRight = true
 		}
-		if ((posInZone.Y == pos.Y + 1) && (posInZone.X == pos.X)){
+		if ((posInZone.Y == pos.Y + 1) && (posInZone.X == pos.X)) {
 			NotEdgeTop = true
 		}
-		if ((posInZone.Y == pos.Y - 1) && (posInZone.X == pos.X)){
+		if ((posInZone.Y == pos.Y - 1) && (posInZone.X == pos.X)) {
 			NotEdgeBottom = true
 		}
 	}

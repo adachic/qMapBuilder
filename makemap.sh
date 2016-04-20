@@ -20,6 +20,7 @@ do
         CNT=`expr $CNT + 1`
         echo "cp $line $MAPDIR/$CNT.map.json"
         cp $line $MAPDIR/$CNT.map.json
+        cp $line $OUTDIR/$CNT.map.json
 done < worker/jsons
 
 find ./output -type f -name '*.png' > worker/pngs
