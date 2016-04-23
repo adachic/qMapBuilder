@@ -12,7 +12,7 @@ type xymap struct {
 	mapSize    GameMapSize
 	matrix     [][]MacroMapType //種別
 	high       [][]int          //高さ
-	areaId 	[][]int          //A*のためのエリアID
+	areaId     [][]int          //A*のためのエリアID
 	zoneMarked bool
 }
 
@@ -43,9 +43,22 @@ func (xy *xymap) init(mapSize GameMapSize) *xymap {
 	}
 	xy.fillHeightZero()
 
+	xy.areaId = make([][]int, mapSize.MaxY)
+	for y := 0; y < mapSize.MaxY; y++ {
+		xy.areaId[y] = make([]int, mapSize.MaxX)
+	}
+	xy.fillHeightZero()
 	return xy
 }
 
+//areaId=-1で埋める
+func (xy *xymap) fillArea0() {
+	for x := 0; x < xy.mapSize.MaxX; x++ {
+		for y := 0; y < xy.mapSize.MaxY; y++ {
+			xy.areaId[y][x] = -1
+		}
+	}
+}
 //高さ0で埋める
 func (xy *xymap) fillHeightZero() {
 	for x := 0; x < xy.mapSize.MaxX; x++ {
@@ -315,11 +328,52 @@ func (xy *xymap) printMapForDebug() {
 				fmt.Print("A")
 			case MacroMapTypeEnemyPoint:
 				fmt.Print("E")
+			case MacroMapTypeSwampWater: //水系
+				fallthrough
+			case MacroMapTypeSwampRava:
+				fallthrough
+			case MacroMapTypeSwampPoison:
+				fallthrough
+			case MacroMapTypeSwampHeal:
+				fmt.Print("~")
 			}
 		}
 		fmt.Print("   ")
 		for x := 0; x < xy.mapSize.MaxX; x++ {
 			fmt.Printf("%2d", xy.high[y][x])
+		}
+		fmt.Print("\n")
+	}
+	fmt.Printf("\n")
+	for y := (xy.mapSize.MaxY - 1); y >= 0; y-- {
+		fmt.Printf("%02d ", y)
+		for x := 0; x < xy.mapSize.MaxX; x++ {
+			switch xy.matrix[y][x] {
+			case MacroMapTypeCantEnter:
+				fmt.Print("#")
+			case MacroMapTypeRoad:
+				fmt.Print(".")
+			case MacroMapTypeRough:
+				fmt.Print(";")
+			case MacroMapTypeWall:
+				fmt.Print("=")
+			case MacroMapTypeAllyPoint:
+				fmt.Print("A")
+			case MacroMapTypeEnemyPoint:
+				fmt.Print("E")
+			case MacroMapTypeSwampWater: //水系
+				fallthrough
+			case MacroMapTypeSwampRava:
+				fallthrough
+			case MacroMapTypeSwampPoison:
+				fallthrough
+			case MacroMapTypeSwampHeal:
+				fmt.Print("~")
+			}
+		}
+		fmt.Print("   ")
+		for x := 0; x < xy.mapSize.MaxX; x++ {
+			fmt.Printf("%2d", xy.areaId[y][x])
 		}
 		fmt.Print("\n")
 	}
@@ -593,12 +647,11 @@ func (xy *xymap) openNearPanel(x int, y int, opened *[]GameMapPosition, restrict
 		*opened = append(*opened, GameMapPosition{X:x, Y:y, Z:currentHight})
 		DDDlog("opened1:%d\n", len(*opened));
 	}
-	if (xy.shouldOpen(currentHight, x, y - 1, *opened, restrictedNum)) {
-		opens := xy.openNearPanel(x, y - 1, opened, restrictedNum)
+	if (xy.shouldOpen(currentHight, x + 1, y, *opened, restrictedNum)) {
+		opens := xy.openNearPanel(x + 1, y, opened, restrictedNum)
 		*opened = append(*opened, *opens...)
-		DDDlog("opened20:%d\n", len(*opened));
 		trim(opened)
-		DDDlog("opened2 :%d\n", len(*opened));
+		DDDlog("opened5:%d\n", len(*opened));
 	}
 	if (xy.shouldOpen(currentHight, x, y + 1, *opened, restrictedNum)) {
 		opens := xy.openNearPanel(x, y + 1, opened, restrictedNum)
@@ -606,17 +659,18 @@ func (xy *xymap) openNearPanel(x int, y int, opened *[]GameMapPosition, restrict
 		trim(opened)
 		DDDlog("opened3:%d\n", len(*opened));
 	}
+	if (xy.shouldOpen(currentHight, x, y - 1, *opened, restrictedNum)) {
+		opens := xy.openNearPanel(x, y - 1, opened, restrictedNum)
+		*opened = append(*opened, *opens...)
+		DDDlog("opened20:%d\n", len(*opened));
+		trim(opened)
+		DDDlog("opened2 :%d\n", len(*opened));
+	}
 	if (xy.shouldOpen(currentHight, x - 1, y, *opened, restrictedNum)) {
-		opens := xy.openNearPanel(x - 1, y, opened,  restrictedNum)
+		opens := xy.openNearPanel(x - 1, y, opened, restrictedNum)
 		*opened = append(*opened, *opens...)
 		trim(opened)
 		DDDlog("opened4:%d\n", len(*opened));
-	}
-	if (xy.shouldOpen(currentHight, x + 1, y, *opened, restrictedNum)) {
-		opens := xy.openNearPanel(x + 1, y, opened, restrictedNum)
-		*opened = append(*opened, *opens...)
-		trim(opened)
-		DDDlog("opened5:%d\n", len(*opened));
 	}
 	DDDlog("close x:%d, y:%d, z:%d\n", x, y, currentHight);
 	//	trim(opened);
@@ -658,7 +712,7 @@ func (xy *xymap) shouldOpen(currentHigh int, x int, y int, opened []GameMapPosit
 			return false;
 		}
 	}
-	if (restrictedNum != 0 && restrictedNum <= len(opened)){
+	if (restrictedNum != 0 && restrictedNum < len(opened)) {
 		return false
 	}
 	return true;
@@ -965,15 +1019,23 @@ func (xy *xymap)zoningForAstar() [][]GameMapPosition {
 			if len(*zone) == 0 {
 				continue
 			}
+			for _, value := range *zone {
+				if xy.areaId[value.Y][value.X] >= 0{
+					xy.areaId[value.Y][value.X] = i
+				}
+			}
 			totalOpened = append(totalOpened, *opened...)
 
 			zones = append(zones, []GameMapPosition{})
 			zones[i] = append(zones[i], *zone...)
 
 			totalOpened = append(totalOpened, *zone...)
+
 			i++
-			DDDlog("for A*[%d]:%d x:%d,y:%d,z%d, opened:%d\n",
+			/*
+			Dlog("for A*[%d]:%d x:%d,y:%d,z%d, opened:%d\n",
 				xy.areaId[y][x], i, x, y, xy.high[y][x], len(*zone))
+				*/
 		}
 	}
 	return zones
