@@ -190,9 +190,7 @@ func (game_map *GameMap) init(condition GameMapCondition) *GameMap {
 		xymap.putRoads(game_map.Difficult, game_map.AllyStartPoint, game_map.EnemyStartPoints)
 
 		//壁配置
-
 		//ラフ配置
-
 
 		//味方、敵ポイント
 		{
@@ -228,10 +226,10 @@ func (game_map *GameMap) init(condition GameMapCondition) *GameMap {
 		//A*高速化のためのメタ情報生成
 		{
 			//ゾーニング
-			xymap.zoningForAstar()
+			zones := xymap.zoningForAstar()
 
 			//ゾーンをグラフ化
-			xymap.makeGraphForAstar()
+			xymap.makeGraphForAstar(zones)
 		}
 
 

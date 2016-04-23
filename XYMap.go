@@ -757,7 +757,8 @@ func (xy *xymap) validate() {
 //zone1,zone2が隣り合っていればtrue,
 //zone1の隣り合っている座標を返す
 //zone2の隣り合っている座標を返す
-func (xy *xymap) isNeighbough(zone1 []GameMapPosition, zone2 []GameMapPosition) (bool, GameMapPosition, GameMapPosition) {
+func (xy *xymap) isNeighbough(zone1 []GameMapPosition, zone2 []GameMapPosition) (bool,
+GameMapPosition, GameMapPosition) {
 	matrix := make([][]int, xy.mapSize.MaxY)
 	for y := 0; y < xy.mapSize.MaxY; y++ {
 		matrix[y] = make([]int, xy.mapSize.MaxX)
@@ -1017,27 +1018,42 @@ func (xy *xymap)zoningForAstar() [][]GameMapPosition {
 			opened := &[]GameMapPosition{}
 			zone := xy.getNearHeightPanels(x, y, opened, 25)
 			//			fmt.Printf("\nlen%d",len(zone))
+
 			if len(*zone) == 0 {
 				continue
 			}
-			for _, value := range *zone {
-				if xy.areaId[value.Y][value.X] < 0 {
+			//totalOpened = append(totalOpened, *opened...)
+			newZone := []GameMapPosition{}
+
+			Dlog("zone:%+v \n", *zone)
+
+			shouldCreate := false
+			for _, open := range *zone {
+				shouldAppend := true
+				for _, pos := range totalOpened {
+					if pos.X == open.X && pos.Y == open.Y {
+						shouldAppend = false
+					}
+				}
+				if !shouldAppend {
+					continue
+				}
+				shouldCreate = true
+				newZone = append(newZone, open)
+			}
+
+			if (shouldCreate) {
+				//1増やす
+				zones = append(zones, []GameMapPosition{})
+				zones[i] = append(zones[i], newZone...)
+				for _, value := range newZone {
 					xy.areaId[value.Y][value.X] = i
 				}
 				xy.maxAreaId = i
+				i++
 			}
-			totalOpened = append(totalOpened, *opened...)
-
-			zones = append(zones, []GameMapPosition{})
-			zones[i] = append(zones[i], *zone...)
 
 			totalOpened = append(totalOpened, *zone...)
-
-			i++
-			/*
-			Dlog("for A*[%d]:%d x:%d,y:%d,z%d, opened:%d\n",
-				xy.areaId[y][x], i, x, y, xy.high[y][x], len(*zone))
-				*/
 		}
 	}
 	return zones
@@ -1110,6 +1126,44 @@ func (xy *xymap) shouldOpenToSame(currentHigh int, x int, y int, opened []GameMa
 
 //ゾーンをグラフ化
 //グラフの辺はゲーム内で計算(A*でずれをださないため)
-func (xy *xymap)makeGraphForAstar() {
+func (xy *xymap)makeGraphForAstar(zones [][]GameMapPosition) {
+	line := make([][]int, xy.maxAreaId + 1)
+	for i := 0; i <= xy.maxAreaId; i++ {
+		//		line[i] = make([]int, 0)
+		line[i] = []int{}
+	}
 
+	//隣り合うゾーンとつなげる
+	for idx, zone := range zones {
+		Dlog("zone %d:%+v\n", idx, zone)
+		areaId := xy.areaId[zone[0].Y][zone[0].X]
+		for idx2, neighboughZone := range zones {
+			if (idx == idx2) {
+				continue
+			}
+			isNeighbough, _, _ := xy.isNeighbough(zone, neighboughZone)
+			if (!isNeighbough) {
+				continue
+			}
+			//隣り合っている
+			neighboughAreaId := xy.areaId[neighboughZone[0].Y][neighboughZone[0].X]
+			//すでに追加されている
+			already := false
+			for _, val := range line[areaId] {
+				if val == neighboughAreaId {
+					already = true
+				}
+			}
+			if already {
+				continue;
+			}
+			line[areaId] = append(line[areaId], neighboughAreaId)
+		}
+	}
+
+	for i := 0; i <= xy.maxAreaId; i++ {
+		Dlog("Lines areaId:%d : %+v\n", i, line[i])
+	}
 }
+
+
