@@ -12,6 +12,7 @@ type xymap struct {
 	mapSize    GameMapSize
 	matrix     [][]MacroMapType //種別
 	high       [][]int          //高さ
+	areaId 	[][]int          //A*のためのエリアID
 	zoneMarked bool
 }
 
@@ -576,41 +577,43 @@ func (xy *xymap) makeGradientRough(rowestHigh int) {
 
 
 //x,yを含むつながっている歩行可能領域を返す
-func (xy *xymap) getNearHeightPanels(x int, y int, opened *[]GameMapPosition) *[]GameMapPosition {
-	return xy.openNearPanel(x, y, opened)
+//restrictedNumの数で打ち切る,0なら打ち切らない
+func (xy *xymap) getNearHeightPanels(x int, y int, opened *[]GameMapPosition, restrictedNum int) *[]GameMapPosition {
+	return xy.openNearPanel(x, y, opened, restrictedNum)
 }
 
 //上下左右のパネルをオープンし、歩行可能なら返す
 //x, y, openedはすでにオープンした累積
-func (xy *xymap) openNearPanel(x int, y int, opened *[]GameMapPosition) *[]GameMapPosition {
+//restrictedNumの数で打ち切る,0なら打ち切らない
+func (xy *xymap) openNearPanel(x int, y int, opened *[]GameMapPosition, restrictedNum int) *[]GameMapPosition {
 	currentHight := xy.high[y][x]
 	DDDlog("open0 x:%d, y:%d, z:%d\n", x, y, currentHight);
 
-	if (xy.shouldOpen(currentHight, x, y, *opened)) {
+	if (xy.shouldOpen(currentHight, x, y, *opened, restrictedNum)) {
 		*opened = append(*opened, GameMapPosition{X:x, Y:y, Z:currentHight})
 		DDDlog("opened1:%d\n", len(*opened));
 	}
-	if (xy.shouldOpen(currentHight, x, y - 1, *opened)) {
-		opens := xy.openNearPanel(x, y - 1, opened)
+	if (xy.shouldOpen(currentHight, x, y - 1, *opened, restrictedNum)) {
+		opens := xy.openNearPanel(x, y - 1, opened, restrictedNum)
 		*opened = append(*opened, *opens...)
 		DDDlog("opened20:%d\n", len(*opened));
 		trim(opened)
 		DDDlog("opened2 :%d\n", len(*opened));
 	}
-	if (xy.shouldOpen(currentHight, x, y + 1, *opened)) {
-		opens := xy.openNearPanel(x, y + 1, opened)
+	if (xy.shouldOpen(currentHight, x, y + 1, *opened, restrictedNum)) {
+		opens := xy.openNearPanel(x, y + 1, opened, restrictedNum)
 		*opened = append(*opened, *opens...)
 		trim(opened)
 		DDDlog("opened3:%d\n", len(*opened));
 	}
-	if (xy.shouldOpen(currentHight, x - 1, y, *opened)) {
-		opens := xy.openNearPanel(x - 1, y, opened)
+	if (xy.shouldOpen(currentHight, x - 1, y, *opened, restrictedNum)) {
+		opens := xy.openNearPanel(x - 1, y, opened,  restrictedNum)
 		*opened = append(*opened, *opens...)
 		trim(opened)
 		DDDlog("opened4:%d\n", len(*opened));
 	}
-	if (xy.shouldOpen(currentHight, x + 1, y, *opened)) {
-		opens := xy.openNearPanel(x + 1, y, opened)
+	if (xy.shouldOpen(currentHight, x + 1, y, *opened, restrictedNum)) {
+		opens := xy.openNearPanel(x + 1, y, opened, restrictedNum)
 		*opened = append(*opened, *opens...)
 		trim(opened)
 		DDDlog("opened5:%d\n", len(*opened));
@@ -639,7 +642,7 @@ func trim(opened *[]GameMapPosition) {
 }
 
 //openすべきならtrue
-func (xy *xymap) shouldOpen(currentHigh int, x int, y int, opened []GameMapPosition) bool {
+func (xy *xymap) shouldOpen(currentHigh int, x int, y int, opened []GameMapPosition, restrictedNum int) bool {
 	if (x >= xy.mapSize.MaxX || y >= xy.mapSize.MaxY || x < 0 || y < 0) {
 		//マップ領域外
 		return false;
@@ -654,6 +657,9 @@ func (xy *xymap) shouldOpen(currentHigh int, x int, y int, opened []GameMapPosit
 			DDDlog("alreadyed x:%d, y:%d\n", x, y);
 			return false;
 		}
+	}
+	if (restrictedNum != 0 && restrictedNum <= len(opened)){
+		return false
 	}
 	return true;
 }
@@ -882,7 +888,7 @@ func (xy *xymap) zoningForValidate() [][]GameMapPosition {
 				continue
 			}
 			opened := &[]GameMapPosition{}
-			zone := xy.getNearHeightPanels(x, y, opened)
+			zone := xy.getNearHeightPanels(x, y, opened, 0)
 			//			fmt.Printf("\nlen%d",len(zone))
 			if len(*zone) == 0 {
 				continue
@@ -933,7 +939,43 @@ func (xy *xymap) zoningForMakeSwamp() [][]GameMapPosition {
 			DDDlog("ahongo:%d x:%d,y:%d,z%d, opened:%d\n", i, x, y, xy.high[y][x], len(*zone))
 		}
 	}
+	return zones
+}
 
+//A*はやくするためにエリア分けする
+func (xy *xymap)zoningForAstar() [][]GameMapPosition {
+	zones := [][]GameMapPosition{}
+	totalOpened := []GameMapPosition{}
+	i := 0
+	for y := 0; y < xy.mapSize.MaxY; y++ {
+		for x := 0; x < xy.mapSize.MaxX; x++ {
+			alreadyOpened := false
+			for _, pos := range totalOpened {
+				if pos.X == x && pos.Y == y {
+					//すでにオープンしていた
+					alreadyOpened = true
+				}
+			}
+			if alreadyOpened {
+				continue
+			}
+			opened := &[]GameMapPosition{}
+			zone := xy.getNearHeightPanels(x, y, opened, 25)
+			//			fmt.Printf("\nlen%d",len(zone))
+			if len(*zone) == 0 {
+				continue
+			}
+			totalOpened = append(totalOpened, *opened...)
+
+			zones = append(zones, []GameMapPosition{})
+			zones[i] = append(zones[i], *zone...)
+
+			totalOpened = append(totalOpened, *zone...)
+			i++
+			DDDlog("for A*[%d]:%d x:%d,y:%d,z%d, opened:%d\n",
+				xy.areaId[y][x], i, x, y, xy.high[y][x], len(*zone))
+		}
+	}
 	return zones
 }
 
@@ -1001,8 +1043,6 @@ func (xy *xymap) shouldOpenToSame(currentHigh int, x int, y int, opened []GameMa
 	}
 	return true;
 }
-
-
 
 
 

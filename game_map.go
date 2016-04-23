@@ -225,6 +225,8 @@ func (game_map *GameMap) init(condition GameMapCondition) *GameMap {
 		//バリデーション
 		xymap.validate()
 
+		//高速化のためのゾーニング
+		xymap.zoningForAstar()
 
 		//水、毒沼配置
 		xymap.makeSwamp(game_map.Geographical)
