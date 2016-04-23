@@ -205,8 +205,8 @@ func (game_map *GameMap) init(condition GameMapCondition) *GameMap {
 		//勾配を生成
 		xymap.makeGradient(game_map.Geographical)
 
+		//敵ポイント追加(ラフ部分にも作るため)
 		{
-			//敵ポイント追加
 			game_map.appendEnemyStartPoints(50, true, xymap)
 
 			for _, enemyStartPoint := range game_map.EnemyStartPoints {
@@ -225,8 +225,15 @@ func (game_map *GameMap) init(condition GameMapCondition) *GameMap {
 		//バリデーション
 		xymap.validate()
 
-		//高速化のためのゾーニング
-		xymap.zoningForAstar()
+		//A*高速化のためのメタ情報生成
+		{
+			//ゾーニング
+			xymap.zoningForAstar()
+
+			//ゾーンをグラフ化
+			xymap.makeGraphForAstar()
+		}
+
 
 		//水、毒沼配置
 		xymap.makeSwamp(game_map.Geographical)

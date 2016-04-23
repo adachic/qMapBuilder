@@ -13,6 +13,7 @@ type xymap struct {
 	matrix     [][]MacroMapType //種別
 	high       [][]int          //高さ
 	areaId     [][]int          //A*のためのエリアID
+	maxAreaId  int
 	zoneMarked bool
 }
 
@@ -47,7 +48,7 @@ func (xy *xymap) init(mapSize GameMapSize) *xymap {
 	for y := 0; y < mapSize.MaxY; y++ {
 		xy.areaId[y] = make([]int, mapSize.MaxX)
 	}
-	xy.fillHeightZero()
+	xy.fillArea0()
 	return xy
 }
 
@@ -1020,9 +1021,10 @@ func (xy *xymap)zoningForAstar() [][]GameMapPosition {
 				continue
 			}
 			for _, value := range *zone {
-				if xy.areaId[value.Y][value.X] >= 0{
+				if xy.areaId[value.Y][value.X] < 0 {
 					xy.areaId[value.Y][value.X] = i
 				}
+				xy.maxAreaId = i
 			}
 			totalOpened = append(totalOpened, *opened...)
 
@@ -1106,20 +1108,8 @@ func (xy *xymap) shouldOpenToSame(currentHigh int, x int, y int, opened []GameMa
 	return true;
 }
 
+//ゾーンをグラフ化
+//グラフの辺はゲーム内で計算(A*でずれをださないため)
+func (xy *xymap)makeGraphForAstar() {
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+}
