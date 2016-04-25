@@ -909,7 +909,7 @@ type GameMap struct {
 	High             [][]int
 	AreaId           [][]int
 	AreaPath         [][]int //グラフの辺[Areaid] に移動可能なAreaIdの配列
-	AreaCenter 	 []GameMapPosition
+	AreaCenter       []GameMapPosition
 
 	Size             GameMapSize
 
@@ -926,10 +926,17 @@ type GameMap struct {
 }
 
 type JsonPanel struct {
-	X  int `json:"x"`
-	Y  int `json:"y"`
-	Z  int `json:"z"`
-	Id string `json:"id"`
+	X      int `json:"x"`
+	Y      int `json:"y"`
+	Z      int `json:"z"`
+	Id     string `json:"id"`
+	AreaId int `json:"aid"`
+}
+
+//エリア追加情報
+type AreaInfo struct {
+	Lines  []int
+	Center GameMapPosition
 }
 
 //マップ
@@ -942,6 +949,7 @@ type JsonGameMap struct {
 	AspectT          int `json:"aspectT"`
 	JungleGym        []JsonPanel `json:"jungleGym"`
 	GameParts        []GameParts `json:"gameParts"`
+	Areas            []AreaInfo
 
 	AllyStartPoint   GameMapPosition `json:"allyStartPoint"`
 	EnemyStartPoints []GameMapPosition `json:"enemyStartPoints"`
@@ -975,6 +983,12 @@ func (game_map *GameMap) createJson(gamePartsDict map[string]GameParts) {
 		EnemyStartPoints:game_map.EnemyStartPoints,
 		Category:game_map.Category,
 	}
+	jsonStub.Areas = make([]AreaInfo, len(game_map.AreaCenter))
+	i := 0
+	for _, center := range game_map.AreaCenter {
+		jsonStub.Areas[i] = AreaInfo{Center:center, Lines:game_map.AreaPath[i]}
+		i++
+	}
 
 	var flags map[string]GameParts
 	for z := 0; z < game_map.Size.MaxZ; z++ {
@@ -995,7 +1009,8 @@ func (game_map *GameMap) createJson(gamePartsDict map[string]GameParts) {
 					//肉抜き
 					continue
 				}
-				jsonStub.JungleGym = append(jsonStub.JungleGym, JsonPanel{X:x, Y:y, Z:z / 2, Id:cube.Id})
+				jsonStub.JungleGym = append(jsonStub.JungleGym,
+					JsonPanel{X:x, Y:y, Z:z / 2, Id:cube.Id, AreaId:game_map.AreaId[y][x]})
 				_, ok := flags[cube.Id]
 				if (!ok) {
 					jsonStub.GameParts = append(jsonStub.GameParts, cube)
