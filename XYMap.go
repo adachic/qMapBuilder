@@ -823,7 +823,9 @@ func (xy *xymap) isNearHigh(pos1 GameMapPosition, pos2 GameMapPosition) bool {
 	high1 := xy.high[pos1.Y][pos1.X]
 	high2 := xy.high[pos2.Y][pos2.X]
 	diff := high1 - high2
-	if (diff > 1 || diff < 1) {
+	if (diff > 1){
+		return false
+	}else if(diff < -1) {
 		return false
 	}
 	return true
@@ -1255,7 +1257,7 @@ func (xy *xymap)makeGraphForAstar(zones [][]GameMapPosition) {
 			if (idx == idx2) {
 				continue
 			}
-			isNeighbough, _, _ := xy.isNeighbough(zone, neighboughZone, false)
+			isNeighbough, _, _ := xy.isNeighbough(zone, neighboughZone, true)
 			if (!isNeighbough) {
 				continue
 			}

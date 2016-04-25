@@ -234,20 +234,21 @@ func (game_map *GameMap) init(condition GameMapCondition) *GameMap {
 			//ゾーンのバリデーション
 			zones2 := xymap.validateForZone(game_map, zones)
 
-			//ゾーンの丸め
-			done := false
-			newZones := zones2
-			tryCount := 10
-			for !done {
-				newZones, done = xymap.roundZones(newZones, restricted - 10)
-				tryCount--
-				if(tryCount <= 0 ){
-					break
-				}
-			}
-
-			//xyのareaIdに反映
 			{
+				newZones := zones2
+
+				//ゾーンの丸め
+				done := false
+				tryCount := 100
+				for !done {
+					newZones, done = xymap.roundZones(newZones, restricted - 10)
+					tryCount--
+					if (tryCount <= 0 ) {
+						break
+					}
+				}
+
+				//xyのareaIdに反映
 				areaId := 0
 				for _, zone := range newZones {
 					for _, pos := range zone {
@@ -256,11 +257,10 @@ func (game_map *GameMap) init(condition GameMapCondition) *GameMap {
 					areaId++
 				}
 				xymap.maxAreaId = areaId
-			}
 
-			//ゾーンをグラフ化
-			//TODO:高さ考慮
-			xymap.makeGraphForAstar(newZones)
+				//ゾーンをグラフ化
+				xymap.makeGraphForAstar(newZones)
+			}
 		}
 
 
