@@ -235,8 +235,16 @@ func (game_map *GameMap) init(condition GameMapCondition) *GameMap {
 			zones2 := xymap.validateForZone(game_map, zones)
 
 			//ゾーンの丸め
-			newZones := xymap.roundZones(zones2, restricted - 10)
-
+			done := false
+			newZones := zones2
+			tryCount := 10
+			for !done {
+				newZones, done = xymap.roundZones(newZones, restricted - 10)
+				tryCount--
+				if(tryCount <= 0 ){
+					break
+				}
+			}
 
 			//xyのareaIdに反映
 			{

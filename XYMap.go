@@ -780,7 +780,7 @@ GameMapPosition, GameMapPosition) {
 	for x := 0; x < xy.mapSize.MaxX; x++ {
 		beforeId = 0
 		for y := 0; y < xy.mapSize.MaxY; y++ {
-			if(isHighNear && !xy.isNearHigh(beforePos, GameMapPosition{X:x, Y:y})){
+			if (isHighNear && !xy.isNearHigh(beforePos, GameMapPosition{X:x, Y:y})) {
 				beforeId = matrix[y][x]
 				beforePos = GameMapPosition{X:x, Y:y}
 				continue
@@ -800,7 +800,7 @@ GameMapPosition, GameMapPosition) {
 	for y := 0; y < xy.mapSize.MaxY; y++ {
 		beforeId = 0
 		for x := 0; x < xy.mapSize.MaxX; x++ {
-			if(isHighNear && !xy.isNearHigh(beforePos, GameMapPosition{X:x, Y:y})){
+			if (isHighNear && !xy.isNearHigh(beforePos, GameMapPosition{X:x, Y:y})) {
 				beforeId = matrix[y][x]
 				beforePos = GameMapPosition{X:x, Y:y}
 				continue
@@ -819,11 +819,11 @@ GameMapPosition, GameMapPosition) {
 }
 
 //2つのposが高さ的に差1以内ならtrue
-func (xy *xymap) isNearHigh(pos1 GameMapPosition, pos2 GameMapPosition) bool{
+func (xy *xymap) isNearHigh(pos1 GameMapPosition, pos2 GameMapPosition) bool {
 	high1 := xy.high[pos1.Y][pos1.X]
 	high2 := xy.high[pos2.Y][pos2.X]
 	diff := high1 - high2
-	if(diff > 1 || diff < 1){
+	if (diff > 1 || diff < 1) {
 		return false
 	}
 	return true
@@ -1164,18 +1164,18 @@ func (xy *xymap)validateForZone(game_map *GameMap, zones [][]GameMapPosition) []
 }
 
 //小さいzone(restricted未満のサイズ)を他のzoneにくっつける
-func (xy *xymap)roundZones(zonesSrc [][]GameMapPosition, restricted int) [][]GameMapPosition{
+//小さいzoneが存在しなくなったらtrueを返す
+func (xy *xymap)roundZones(zonesSrc [][]GameMapPosition, restricted int) ([][]GameMapPosition, bool) {
 	newZones := [][]GameMapPosition{}
 	alreadyAddedIdxs := []int{}
 	i := 0
+	done := true
 
-	for idx, zone := range zonesSrc{
-		if (contains(alreadyAddedIdxs, idx)){
+	for idx, zone := range zonesSrc {
+		if (contains(alreadyAddedIdxs, idx)) {
 			continue
 		}
-		tmpZone := []GameMapPosition{}
-		tmpZone = append(tmpZone, zone...)
-		if(len(zone) > (restricted)){
+		if (len(zone) >= (restricted)) {
 			//十分な大きさがある
 			newZones = append(newZones, []GameMapPosition{})
 			newZones[i] = append(newZones[i], zone...)
@@ -1183,20 +1183,22 @@ func (xy *xymap)roundZones(zonesSrc [][]GameMapPosition, restricted int) [][]Gam
 			i++
 			continue
 		}
-		for idx2 , zone2 := range zonesSrc{
-			if (idx == idx2){
+		tmpZone := []GameMapPosition{}
+		tmpZone = append(tmpZone, zone...)
+		for idx2, zone2 := range zonesSrc {
+			if (idx == idx2) {
 				continue
 			}
-			if (contains(alreadyAddedIdxs, idx2)){
+			if (contains(alreadyAddedIdxs, idx2)) {
 				continue
 			}
-			if(len(zone) > (restricted)){
+			if (len(zone2) >= (restricted)) {
 				//十分な大きさがある
 				continue
 			}
 			//隣接、高さチェック
-			isNeighbough, _, _:= xy.isNeighbough(zone, zone2, true)
-			if !isNeighbough{
+			isNeighbough, _, _ := xy.isNeighbough(zone, zone2, true)
+			if !isNeighbough {
 				continue
 			}
 			//隣り合っており、高さ的にも結合して問題ない
@@ -1209,7 +1211,12 @@ func (xy *xymap)roundZones(zonesSrc [][]GameMapPosition, restricted int) [][]Gam
 		i++
 	}
 
-	return newZones
+	for _, zoneN := range newZones {
+		if len(zoneN) < restricted {
+			done = false
+		}
+	}
+	return newZones, done
 }
 
 func remove(numbers []GameMapPosition, search GameMapPosition) []GameMapPosition {
@@ -1286,7 +1293,6 @@ func zoningForValidateForAstar(game_map *GameMap, input []GameMapPosition) [][]G
 		xymap.high[va.Y][va.X] = 10
 	}
 
-
 	for _, val := range input {
 		x := val.X
 		y := val.Y
@@ -1313,7 +1319,7 @@ func zoningForValidateForAstar(game_map *GameMap, input []GameMapPosition) [][]G
 
 		totalOpened = append(totalOpened, *zone...)
 		i++
-//		DDDlog("ahongo:%d x:%d,y:%d,z%d, opened:%d\n", i, x, y, xy.high[y][x], len(*zone))
+		//		DDDlog("ahongo:%d x:%d,y:%d,z%d, opened:%d\n", i, x, y, xy.high[y][x], len(*zone))
 	}
 	return zones
 }
