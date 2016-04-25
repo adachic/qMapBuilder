@@ -553,10 +553,14 @@ func (game_map *GameMap) allocToJungleGym(maxAreaId int) {
 		game_map.AreaId[y] = make([]int, game_map.Size.MaxX)
 	}
 
+	/*
 	game_map.AreaPath = make([][]int, maxAreaId)
 	for id := 0; id < maxAreaId; id++ {
 		game_map.AreaPath[id] = []int{}
 	}
+
+	game_map.AreaCenter = make([]GameMapPosition, maxAreaId)
+	*/
 }
 
 //ここでxyをjungleGymへ移行
@@ -575,6 +579,7 @@ func (game_map *GameMap) copyFromXY(xy *xymap) {
 			}
 		}
 	}
+	game_map.AreaCenter = xy.areaCenter
 	game_map.AreaPath = xy.areaPath
 }
 
@@ -904,6 +909,7 @@ type GameMap struct {
 	High             [][]int
 	AreaId           [][]int
 	AreaPath         [][]int //グラフの辺[Areaid] に移動可能なAreaIdの配列
+	AreaCenter 	 []GameMapPosition
 
 	Size             GameMapSize
 
