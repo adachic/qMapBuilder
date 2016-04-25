@@ -225,11 +225,18 @@ func (game_map *GameMap) init(condition GameMapCondition) *GameMap {
 
 		//A*高速化のためのメタ情報生成
 		{
+			//A*の1ゾーンのMax面積
+			restricted := 25
+
 			//ゾーニング
-			zones := xymap.zoningForAstar()
+			zones := xymap.zoningForAstar(restricted)
 
 			//ゾーンのバリデーション
-			newZones := xymap.validateForZone(game_map, zones)
+			zones2 := xymap.validateForZone(game_map, zones)
+
+			//ゾーンの丸め
+			newZones := xymap.roundZones(zones2, restricted - 10)
+
 
 			//xyのareaIdに反映
 			{
@@ -244,6 +251,7 @@ func (game_map *GameMap) init(condition GameMapCondition) *GameMap {
 			}
 
 			//ゾーンをグラフ化
+			//TODO:高さ考慮
 			xymap.makeGraphForAstar(newZones)
 		}
 

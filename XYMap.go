@@ -737,7 +737,7 @@ func (xy *xymap) validate() {
 			if (idx == idx2) {
 				continue
 			}
-			isNeighbough, zone1edge, zone2edge := xy.isNeighbough(zone, neighboughZone)
+			isNeighbough, zone1edge, zone2edge := xy.isNeighbough(zone, neighboughZone, false)
 			if (!isNeighbough) {
 				continue
 			}
@@ -757,7 +757,8 @@ func (xy *xymap) validate() {
 //zone1,zone2が隣り合っていればtrue,
 //zone1の隣り合っている座標を返す
 //zone2の隣り合っている座標を返す
-func (xy *xymap) isNeighbough(zone1 []GameMapPosition, zone2 []GameMapPosition) (bool,
+//isHighNear高さも考慮するならtrue
+func (xy *xymap) isNeighbough(zone1 []GameMapPosition, zone2 []GameMapPosition, isHighNear bool) (bool,
 GameMapPosition, GameMapPosition) {
 	matrix := make([][]int, xy.mapSize.MaxY)
 	for y := 0; y < xy.mapSize.MaxY; y++ {
@@ -779,6 +780,11 @@ GameMapPosition, GameMapPosition) {
 	for x := 0; x < xy.mapSize.MaxX; x++ {
 		beforeId = 0
 		for y := 0; y < xy.mapSize.MaxY; y++ {
+			if(isHighNear && !xy.isNearHigh(beforePos, GameMapPosition{X:x, Y:y})){
+				beforeId = matrix[y][x]
+				beforePos = GameMapPosition{X:x, Y:y}
+				continue
+			}
 			if (beforeId == 2 && matrix[y][x] == 1) {
 				return true, GameMapPosition{X:x, Y:y}, beforePos
 			}
@@ -794,6 +800,11 @@ GameMapPosition, GameMapPosition) {
 	for y := 0; y < xy.mapSize.MaxY; y++ {
 		beforeId = 0
 		for x := 0; x < xy.mapSize.MaxX; x++ {
+			if(isHighNear && !xy.isNearHigh(beforePos, GameMapPosition{X:x, Y:y})){
+				beforeId = matrix[y][x]
+				beforePos = GameMapPosition{X:x, Y:y}
+				continue
+			}
 			if (beforeId == 2 && matrix[y][x] == 1) {
 				return true, GameMapPosition{X:x, Y:y}, beforePos
 			}
@@ -805,6 +816,17 @@ GameMapPosition, GameMapPosition) {
 		}
 	}
 	return false, GameMapPosition{}, GameMapPosition{}
+}
+
+//2つのposが高さ的に差1以内ならtrue
+func (xy *xymap) isNearHigh(pos1 GameMapPosition, pos2 GameMapPosition) bool{
+	high1 := xy.high[pos1.Y][pos1.X]
+	high2 := xy.high[pos2.Y][pos2.X]
+	diff := high1 - high2
+	if(diff > 1 || diff < 1){
+		return false
+	}
+	return true
 }
 
 //zone1,zone2を階段でつなげる
@@ -1000,7 +1022,7 @@ func (xy *xymap) zoningForMakeSwamp() [][]GameMapPosition {
 }
 
 //A*はやくするためにエリア分けする
-func (xy *xymap)zoningForAstar() [][]GameMapPosition {
+func (xy *xymap)zoningForAstar(restricted int) [][]GameMapPosition {
 	zones := [][]GameMapPosition{}
 	totalOpened := []GameMapPosition{}
 	i := 0
@@ -1017,7 +1039,7 @@ func (xy *xymap)zoningForAstar() [][]GameMapPosition {
 				continue
 			}
 			opened := &[]GameMapPosition{}
-			zone := xy.getNearHeightPanels(x, y, opened, 25)
+			zone := xy.getNearHeightPanels(x, y, opened, restricted)
 			//			fmt.Printf("\nlen%d",len(zone))
 
 			if len(*zone) == 0 {
@@ -1129,7 +1151,6 @@ func (xy *xymap) shouldOpenToSame(currentHigh int, x int, y int, opened []GameMa
 
 
 //zonesで離れた地点を分離
-//小さいzoneを他のzoneにくっつける
 func (xy *xymap)validateForZone(game_map *GameMap, zones [][]GameMapPosition) [][]GameMapPosition {
 
 	newZones := [][]GameMapPosition{}
@@ -1142,6 +1163,55 @@ func (xy *xymap)validateForZone(game_map *GameMap, zones [][]GameMapPosition) []
 	return newZones
 }
 
+//小さいzone(restricted未満のサイズ)を他のzoneにくっつける
+func (xy *xymap)roundZones(zonesSrc [][]GameMapPosition, restricted int) [][]GameMapPosition{
+	newZones := [][]GameMapPosition{}
+	alreadyAddedIdxs := []int{}
+	i := 0
+
+	for idx, zone := range zonesSrc{
+		if (contains(alreadyAddedIdxs, idx)){
+			continue
+		}
+		tmpZone := []GameMapPosition{}
+		tmpZone = append(tmpZone, zone...)
+		if(len(zone) > (restricted)){
+			//十分な大きさがある
+			newZones = append(newZones, []GameMapPosition{})
+			newZones[i] = append(newZones[i], zone...)
+			alreadyAddedIdxs = append(alreadyAddedIdxs, idx)
+			i++
+			continue
+		}
+		for idx2 , zone2 := range zonesSrc{
+			if (idx == idx2){
+				continue
+			}
+			if (contains(alreadyAddedIdxs, idx2)){
+				continue
+			}
+			if(len(zone) > (restricted)){
+				//十分な大きさがある
+				continue
+			}
+			//隣接、高さチェック
+			isNeighbough, _, _:= xy.isNeighbough(zone, zone2, true)
+			if !isNeighbough{
+				continue
+			}
+			//隣り合っており、高さ的にも結合して問題ない
+			tmpZone = append(tmpZone, zone2...)
+			alreadyAddedIdxs = append(alreadyAddedIdxs, idx)
+			alreadyAddedIdxs = append(alreadyAddedIdxs, idx2)
+		}
+		newZones = append(newZones, []GameMapPosition{})
+		newZones[i] = append(newZones[i], tmpZone...)
+		i++
+	}
+
+	return newZones
+}
+
 func remove(numbers []GameMapPosition, search GameMapPosition) []GameMapPosition {
 	result := []GameMapPosition{}
 	for _, num := range numbers {
@@ -1150,6 +1220,15 @@ func remove(numbers []GameMapPosition, search GameMapPosition) []GameMapPosition
 		}
 	}
 	return result
+}
+
+func contains(s []int, e int) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
 }
 
 //ゾーンをグラフ化
@@ -1169,7 +1248,7 @@ func (xy *xymap)makeGraphForAstar(zones [][]GameMapPosition) {
 			if (idx == idx2) {
 				continue
 			}
-			isNeighbough, _, _ := xy.isNeighbough(zone, neighboughZone)
+			isNeighbough, _, _ := xy.isNeighbough(zone, neighboughZone, false)
 			if (!isNeighbough) {
 				continue
 			}
