@@ -232,11 +232,9 @@ func (game_map *GameMap) init(condition GameMapCondition) *GameMap {
 			zones := xymap.zoningForAstar(restricted)
 
 			//ゾーンのバリデーション
-			zones2 := xymap.validateForZone(game_map, zones)
+			newZones := xymap.validateForZone(game_map, zones)
 
 			{
-				newZones := zones2
-
 				//ゾーンの丸め
 				done := false
 				tryCount := 100
@@ -257,6 +255,9 @@ func (game_map *GameMap) init(condition GameMapCondition) *GameMap {
 					areaId++
 				}
 				xymap.maxAreaId = areaId
+
+				//各ゾーンの中心点を算出
+				xymap.calcCenterPoint(newZones)
 
 				//ゾーンをグラフ化
 				xymap.makeGraphForAstar(newZones)

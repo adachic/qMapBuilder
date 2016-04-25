@@ -10,10 +10,11 @@ import (
 
 type xymap struct {
 	mapSize    GameMapSize
-	matrix     [][]MacroMapType //種別
-	high       [][]int          //高さ
-	areaId     [][]int          //A*のためのエリアID
+	matrix     [][]MacroMapType  //種別
+	high       [][]int           //高さ
+	areaId     [][]int           //A*のためのエリアID
 	areaPath   [][]int
+	areaCenter []GameMapPosition //エリアの中心となる座標
 	maxAreaId  int
 	zoneMarked bool
 }
@@ -346,7 +347,7 @@ func (xy *xymap) printMapForDebug() {
 		}
 		fmt.Print("   ")
 		for x := 0; x < xy.mapSize.MaxX; x++ {
-			fmt.Printf("%2d", xy.high[y][x])
+			fmt.Printf("%3d", xy.high[y][x])
 		}
 		fmt.Print("\n")
 	}
@@ -379,7 +380,7 @@ func (xy *xymap) printMapForDebug() {
 		}
 		fmt.Print("   ")
 		for x := 0; x < xy.mapSize.MaxX; x++ {
-			fmt.Printf("%2d", xy.areaId[y][x])
+			fmt.Printf("%3d", xy.areaId[y][x])
 		}
 		fmt.Print("\n")
 	}
@@ -828,9 +829,9 @@ func (xy *xymap) isNearHigh(pos1 GameMapPosition, pos2 GameMapPosition) bool {
 	high1 := xy.high[pos1.Y][pos1.X]
 	high2 := xy.high[pos2.Y][pos2.X]
 	diff := high1 - high2
-	if (diff > 1){
+	if (diff > 1) {
 		return false
-	}else if(diff < -1) {
+	}else if (diff < -1) {
 		return false
 	}
 	return true
@@ -1245,6 +1246,50 @@ func contains(s []int, e int) bool {
 	return false
 }
 
+
+//各Areaの中心点を算出
+func (xy *xymap)calcCenterPoint(zones [][]GameMapPosition) {
+	areaid := 0
+	xy.areaCenter = make([]GameMapPosition, xy.maxAreaId)
+	for _, zone := range zones {
+		xSum := 0
+		ySum := 0
+		for _, pos := range zone {
+			xSum += pos.X
+			ySum += pos.Y
+		}
+		cnt := len(zone)
+		centerAbout := GameMapPosition{X:xSum / cnt, Y:ySum / cnt}
+		distance := 0
+		for distance < 100 {
+			if (xy.areaId[centerAbout.Y][centerAbout.X] == areaid) {
+				break
+			}
+			if (xy.areaId[centerAbout.Y][centerAbout.X + distance] == areaid) {
+				centerAbout.X += distance
+				break
+			}
+			if ((centerAbout.X - distance >= 0) &&
+			xy.areaId[centerAbout.Y][centerAbout.X - distance] == areaid) {
+				centerAbout.X -= distance
+				break
+			}
+			if (xy.areaId[centerAbout.Y + distance][centerAbout.X] == areaid) {
+				centerAbout.Y += distance
+				break
+			}
+			if ((centerAbout.Y - distance >= 0) &&
+			xy.areaId[centerAbout.Y - distance][centerAbout.X] == areaid) {
+				centerAbout.Y -= distance
+				break
+			}
+			distance++
+		}
+		xy.areaCenter[areaid] = centerAbout
+		areaid++;
+	}
+}
+
 //ゾーンをグラフ化
 //グラフの辺はゲーム内で計算(A*でずれをださないため)
 func (xy *xymap)makeGraphForAstar(zones [][]GameMapPosition) {
@@ -1256,7 +1301,7 @@ func (xy *xymap)makeGraphForAstar(zones [][]GameMapPosition) {
 
 	//隣り合うゾーンとつなげる
 	for idx, zone := range zones {
-		Dlog("zone %d:%+v\n", idx, zone)
+		DDDlog("zone %d:%+v\n", idx, zone)
 		areaId := xy.areaId[zone[0].Y][zone[0].X]
 		for idx2, neighboughZone := range zones {
 			if (idx == idx2) {
@@ -1283,7 +1328,7 @@ func (xy *xymap)makeGraphForAstar(zones [][]GameMapPosition) {
 	}
 
 	for i := 0; i < xy.maxAreaId; i++ {
-		Dlog("Lines areaId:%d : %+v\n", i, line[i])
+		Dlog("Lines areaId:%d (%d,%d) : %+v\n", i, xy.areaCenter[i].X, xy.areaCenter[i].Y, line[i])
 	}
 	xy.areaPath = line
 }
