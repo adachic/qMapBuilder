@@ -228,8 +228,23 @@ func (game_map *GameMap) init(condition GameMapCondition) *GameMap {
 			//ゾーニング
 			zones := xymap.zoningForAstar()
 
+			//ゾーンのバリデーション
+			newZones := xymap.validateForZone(game_map, zones)
+
+			//xyのareaIdに反映
+			{
+				areaId := 0
+				for _, zone := range newZones {
+					for _, pos := range zone {
+						xymap.areaId[pos.Y][pos.X] = areaId
+					}
+					areaId++
+				}
+				xymap.maxAreaId = areaId
+			}
+
 			//ゾーンをグラフ化
-			xymap.makeGraphForAstar(zones)
+			xymap.makeGraphForAstar(newZones)
 		}
 
 
@@ -900,11 +915,11 @@ func (game_map *GameMap) createJson(gamePartsDict map[string]GameParts) {
 	Dlog("==output json==\n")
 
 	game_map.AllyStartPoint.Z = game_map.High[game_map.AllyStartPoint.Y][game_map.AllyStartPoint.X] / 2 // - 1
-	for i,  _:= range game_map.EnemyStartPoints {
+	for i, _ := range game_map.EnemyStartPoints {
 		// キーは使われません
 		game_map.EnemyStartPoints[i].Z =
 		game_map.High[game_map.EnemyStartPoints[i].Y][game_map.EnemyStartPoints[i].X] / 2  //- 1
-//		Dlog("enemyStartPoint: %+v\n", enemyStartPoint)
+		//		Dlog("enemyStartPoint: %+v\n", enemyStartPoint)
 	}
 
 	for _, enemyStartPoint2 := range game_map.EnemyStartPoints {

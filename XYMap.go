@@ -962,6 +962,7 @@ func (xy *xymap) zoningForValidate() [][]GameMapPosition {
 	return zones
 }
 
+
 //各タイルを検証していって、ゾーニングする
 func (xy *xymap) zoningForMakeSwamp() [][]GameMapPosition {
 	zones := [][]GameMapPosition{}
@@ -1046,10 +1047,12 @@ func (xy *xymap)zoningForAstar() [][]GameMapPosition {
 				//1増やす
 				zones = append(zones, []GameMapPosition{})
 				zones[i] = append(zones[i], newZone...)
+				/*
 				for _, value := range newZone {
 					xy.areaId[value.Y][value.X] = i
 				}
 				xy.maxAreaId = i
+				*/
 				i++
 			}
 
@@ -1124,6 +1127,31 @@ func (xy *xymap) shouldOpenToSame(currentHigh int, x int, y int, opened []GameMa
 	return true;
 }
 
+
+//zonesで離れた地点を分離
+//小さいzoneを他のzoneにくっつける
+func (xy *xymap)validateForZone(game_map *GameMap, zones [][]GameMapPosition) [][]GameMapPosition {
+
+	newZones := [][]GameMapPosition{}
+
+	//ゾーニング
+	for _, zone := range zones {
+		zones := zoningForValidateForAstar(game_map, zone)
+		newZones = append(newZones, zones...)
+	}
+	return newZones
+}
+
+func remove(numbers []GameMapPosition, search GameMapPosition) []GameMapPosition {
+	result := []GameMapPosition{}
+	for _, num := range numbers {
+		if num != search {
+			result = append(result, num)
+		}
+	}
+	return result
+}
+
 //ゾーンをグラフ化
 //グラフの辺はゲーム内で計算(A*でずれをださないため)
 func (xy *xymap)makeGraphForAstar(zones [][]GameMapPosition) {
@@ -1166,4 +1194,48 @@ func (xy *xymap)makeGraphForAstar(zones [][]GameMapPosition) {
 	}
 }
 
+
+
+//引数のゾーンをさらにゾーニングする
+func zoningForValidateForAstar(game_map *GameMap, input []GameMapPosition) [][]GameMapPosition {
+	zones := [][]GameMapPosition{}
+	totalOpened := []GameMapPosition{}
+	xymap := NewXYMap(game_map.Size)
+	i := 0
+
+	for _, va := range input {
+		xymap.high[va.Y][va.X] = 10
+	}
+
+
+	for _, val := range input {
+		x := val.X
+		y := val.Y
+		alreadyOpened := false
+		for _, pos := range totalOpened {
+			if pos.X == x && pos.Y == y {
+				//すでにオープンしていた
+				alreadyOpened = true
+			}
+		}
+		if alreadyOpened {
+			continue
+		}
+		opened := &[]GameMapPosition{}
+		zone := xymap.getNearHeightPanels(x, y, opened, 0)
+		//			fmt.Printf("\nlen%d",len(zone))
+		if len(*zone) == 0 {
+			continue
+		}
+		totalOpened = append(totalOpened, *opened...)
+
+		zones = append(zones, []GameMapPosition{})
+		zones[i] = append(zones[i], *zone...)
+
+		totalOpened = append(totalOpened, *zone...)
+		i++
+//		DDDlog("ahongo:%d x:%d,y:%d,z%d, opened:%d\n", i, x, y, xy.high[y][x], len(*zone))
+	}
+	return zones
+}
 
