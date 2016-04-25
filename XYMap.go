@@ -13,6 +13,7 @@ type xymap struct {
 	matrix     [][]MacroMapType //種別
 	high       [][]int          //高さ
 	areaId     [][]int          //A*のためのエリアID
+	areaPath   [][]int
 	maxAreaId  int
 	zoneMarked bool
 }
@@ -23,6 +24,10 @@ func (xy *xymap) getMatrix(x int, y int) MacroMapType {
 
 func (xy *xymap) getHigh(x int, y int) int {
 	return xy.high[y][x]
+}
+
+func (xy *xymap) getAreaId(x int, y int) int {
+	return xy.areaId[y][x]
 }
 
 func NewXYMap(mapSize GameMapSize) *xymap {
@@ -1050,7 +1055,7 @@ func (xy *xymap)zoningForAstar(restricted int) [][]GameMapPosition {
 			//totalOpened = append(totalOpened, *opened...)
 			newZone := []GameMapPosition{}
 
-			Dlog("zone:%+v \n", *zone)
+			DDDlog("zone:%+v \n", *zone)
 
 			shouldCreate := false
 			for _, open := range *zone {
@@ -1243,8 +1248,8 @@ func contains(s []int, e int) bool {
 //ゾーンをグラフ化
 //グラフの辺はゲーム内で計算(A*でずれをださないため)
 func (xy *xymap)makeGraphForAstar(zones [][]GameMapPosition) {
-	line := make([][]int, xy.maxAreaId + 1)
-	for i := 0; i <= xy.maxAreaId; i++ {
+	line := make([][]int, xy.maxAreaId)
+	for i := 0; i < xy.maxAreaId; i++ {
 		//		line[i] = make([]int, 0)
 		line[i] = []int{}
 	}
@@ -1277,9 +1282,10 @@ func (xy *xymap)makeGraphForAstar(zones [][]GameMapPosition) {
 		}
 	}
 
-	for i := 0; i <= xy.maxAreaId; i++ {
+	for i := 0; i < xy.maxAreaId; i++ {
 		Dlog("Lines areaId:%d : %+v\n", i, line[i])
 	}
+	xy.areaPath = line
 }
 
 

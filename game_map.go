@@ -263,12 +263,11 @@ func (game_map *GameMap) init(condition GameMapCondition) *GameMap {
 			}
 		}
 
-
 		//水、毒沼配置
 		xymap.makeSwamp(game_map.Geographical)
 
 		//alloc/init
-		game_map.allocToJungleGym()
+		game_map.allocToJungleGym(xymap.maxAreaId)
 
 		//xymap情報をコピー
 		game_map.copyFromXY(xymap)
@@ -525,7 +524,7 @@ func (game_map *GameMap)fillJungleGymToEmpty() {
 	}
 }
 
-func (game_map *GameMap) allocToJungleGym() {
+func (game_map *GameMap) allocToJungleGym(maxAreaId int) {
 	game_map.JungleGym = make([][][]GameParts, game_map.Size.MaxZ + 1)
 	for z := 0; z <= game_map.Size.MaxZ; z++ {
 		game_map.JungleGym[z] = make([][]GameParts, game_map.Size.MaxY)
@@ -547,6 +546,16 @@ func (game_map *GameMap) allocToJungleGym() {
 	for y := 0; y < game_map.Size.MaxY; y++ {
 		game_map.High[y] = make([]int, game_map.Size.MaxX)
 	}
+
+	game_map.AreaId = make([][]int, game_map.Size.MaxY)
+	for y := 0; y < game_map.Size.MaxY; y++ {
+		game_map.AreaId[y] = make([]int, game_map.Size.MaxX)
+	}
+
+	game_map.AreaPath = make([][]int, maxAreaId)
+	for id := 0; id < maxAreaId; id++ {
+		game_map.AreaPath[id] = []int{}
+	}
 }
 
 //ここでxyをjungleGymへ移行
@@ -555,13 +564,17 @@ func (game_map *GameMap) copyFromXY(xy *xymap) {
 		for y := 0; y < xy.mapSize.MaxY; y++ {
 			macro := xy.getMatrix(x, y);
 			high := xy.getHigh(x, y);
+
 			game_map.High[y][x] = high;
+			game_map.AreaId[y][x] = xy.getAreaId(x, y)
+
 			DDlog("crash x:%d y:%d high%d, lenz:%d", x, y, high, len(game_map.MacroMapTypes))
 			for z := 0; z < high; z++ {
 				game_map.MacroMapTypes[z][y][x] = macro;
 			}
 		}
 	}
+	game_map.AreaPath = xy.areaPath
 }
 
 //パーツとのひも付け
@@ -888,6 +901,8 @@ type GameMap struct {
 	JungleGym        [][][]GameParts
 	MacroMapTypes    [][][]MacroMapType
 	High             [][]int
+	AreaId           [][]int
+	AreaPath         [][]int //グラフの辺[Areaid] に移動可能なAreaIdの配列
 
 	Size             GameMapSize
 
