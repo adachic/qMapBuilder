@@ -959,13 +959,23 @@ type JsonGameMap struct {
 //Json生成
 func (game_map *GameMap) createJson(gamePartsDict map[string]GameParts) {
 	Dlog("==output json==\n")
+	{
+		//Ally
+		game_map.AllyStartPoint.Z = game_map.High[game_map.AllyStartPoint.Y][game_map.AllyStartPoint.X] / 2 // - 1
+		ahigh := game_map.High[game_map.AllyStartPoint.Y][game_map.AllyStartPoint.X]
+		if ahigh % 2 != 0 {
+			game_map.AllyStartPoint.Z += 1
+		}
+	}
 
-	game_map.AllyStartPoint.Z = game_map.High[game_map.AllyStartPoint.Y][game_map.AllyStartPoint.X] / 2 // - 1
 	for i, _ := range game_map.EnemyStartPoints {
 		// キーは使われません
 		game_map.EnemyStartPoints[i].Z =
 		game_map.High[game_map.EnemyStartPoints[i].Y][game_map.EnemyStartPoints[i].X] / 2  //- 1
-		//		Dlog("enemyStartPoint: %+v\n", enemyStartPoint)
+		ehigh := game_map.High[game_map.EnemyStartPoints[i].Y][game_map.EnemyStartPoints[i].X]
+		if ehigh % 2 != 0 {
+			game_map.EnemyStartPoints[i].Z += 1
+		}
 	}
 
 	for _, enemyStartPoint2 := range game_map.EnemyStartPoints {

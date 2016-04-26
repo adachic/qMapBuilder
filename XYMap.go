@@ -1285,7 +1285,12 @@ func (xy *xymap)calcCenterPoint(zones [][]GameMapPosition) {
 			}
 			distance++
 		}
+		centerAbout.Z = (xy.high[centerAbout.Y][centerAbout.X] /2)
+		if(xy.high[centerAbout.Y][centerAbout.X] % 2 != 0){
+			centerAbout.Z += 1
+		}
 		xy.areaCenter[areaid] = centerAbout
+
 		areaid++;
 	}
 }
@@ -1328,7 +1333,7 @@ func (xy *xymap)makeGraphForAstar(zones [][]GameMapPosition) {
 	}
 
 	for i := 0; i < xy.maxAreaId; i++ {
-		Dlog("Lines areaId:%d (%d,%d) : %+v\n", i, xy.areaCenter[i].X, xy.areaCenter[i].Y, line[i])
+		Dlog("Lines areaId:%d (%d,%d,%d) : %+v\n", i, xy.areaCenter[i].X, xy.areaCenter[i].Y, xy.areaCenter[i].Z,line[i])
 	}
 	xy.areaPath = line
 }
