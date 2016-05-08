@@ -708,7 +708,7 @@ func (xy *xymap) shouldOpen(currentHigh int, x int, y int, opened []GameMapPosit
 		//マップ領域外
 		return false;
 	}
-	if (xy.high[y][x] < (currentHigh - 2) || xy.high[y][x] > (currentHigh + 1)) {
+	if (xy.high[y][x] < (currentHigh - 1) || xy.high[y][x] > (currentHigh + 1)) {
 		//高さ的にアウト
 		return false;
 	}
